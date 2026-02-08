@@ -18,7 +18,6 @@ local resolver = require("src.resolver")
 -- @param manifest table Complete package manifest containing metadata, dependencies, sources, and build instructions
 -- @param args table Installation arguments including bootstrap options, build preferences, and custom configuration overrides
 function installer.install(manifest, args)
-    print("Installing " .. manifest.name .. " " .. manifest.version)
     if args.bootstrap_to then
         config.set_bootstrap_root(args.bootstrap_to)
         print("Bootstrap mode: installing to " .. config.ROOT)
@@ -29,12 +28,33 @@ function installer.install(manifest, args)
         return
     end
 
-    io.write("Proceed with installation? [Y/n] ")
-    local response = io.read()
-    if response and response:lower():sub(1,1) == 'n' then
-        print("Installation cancelled.")
-        return
+    local packages_to_install = {}
+    packages_to_install[manifest.name] = manifest.version
+
+    local deps = installer.get_dependencies(manifest)
+    for dep_name, dep_version in pairs(deps) do
+        if not resolver.is_installed(dep_name) then
+            packages_to_install[dep_name] = dep_version
+        end
     end
+
+    print("Packages to install:")
+    for name, version in pairs(packages_to_install) do
+        print("  " .. name .. " " .. version)
+    end
+    print("Total packages: " .. installer.count_keys(packages_to_install))
+    print("")
+
+    if not args.noask then
+        io.write("Proceed with installation? [Y/n] ")
+        local response = io.read()
+        if response and response:lower():sub(1,1) == 'n' then
+            print("Installation cancelled.")
+            return
+        end
+    end
+
+    print("Installing " .. manifest.name .. " " .. manifest.version)
 
     local build_type = installer.determine_build_type(manifest, args.build_from)
     print("Build type: " .. build_type)
@@ -213,6 +233,24 @@ function installer.copy_from_temp(manifest)
     local dest_path = config.ROOT
     print("Copying files from temporary location...")
     os.execute("cp -r " .. temp_path .. "/* " .. dest_path .. "/")
+end
+
+function installer.get_dependencies(manifest)
+    local deps = {}
+    if manifest.dependencies then
+        for _, dep in ipairs(manifest.dependencies) do
+            deps[dep.name] = dep.version or "latest"
+        end
+    end
+    return deps
+end
+
+function installer.count_keys(table)
+    local count = 0
+    for _ in pairs(table) do
+        count = count + 1
+    end
+    return count
 end
 
 function installer.remove_files(manifest)
