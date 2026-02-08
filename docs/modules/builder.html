@@ -1,0 +1,361 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>pkglet - Hybrid Package Manager Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>pkglet</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>builder</strong></li>
+  <li><a href="../modules/cli.html">cli</a></li>
+  <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/example-manifest.html">example-manifest</a></li>
+  <li><a href="../modules/fetcher.html">fetcher</a></li>
+  <li><a href="../modules/installer.html">installer</a></li>
+  <li><a href="../modules/loader.html">loader</a></li>
+  <li><a href="../modules/resolver.html">resolver</a></li>
+  <li><a href="../modules/search.html">search</a></li>
+  <li><a href="../modules/sync.html">sync</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>builder</code></h1>
+<p>Package building module with support for multiple build systems</p>
+
+<p> This module provides comprehensive package building capabilities supporting
+ various build systems including make, cmake, ninja, and configure scripts.</p>
+<p> It orchestrates the entire build process from source preparation through
+ compilation and installation, handling different build types (source vs binary)
+ and managing build environments. The module includes wrapper functions for
+ common build tools and supports parallel builds with configurable job limits.</p>
+
+<p> The build system is designed to be flexible and extensible, allowing packages
+ to define custom build procedures while providing standardized interfaces for
+ common operations. Build environments are sandboxed to prevent contamination
+ between different packages and build configurations.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#build">build (manifest, build_dir, build_type, options)</a></td>
+	<td class="summary">Execute the complete build process for a package</p>
+
+<p> This function orchestrates the entire package build process, setting up the
+ build environment, executing the appropriate build function, and managing
+ build hooks.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#cmake_wrapper">cmake_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute CMake configuration commands with flexible argument support</p>
+
+<p> This function provides a wrapper for the CMake build system generator,
+ enabling packages to configure their build environment using CMake's
+ declarative configuration approach.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#configure_wrapper">configure_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute GNU autotools configure scripts with comprehensive option support</p>
+
+<p> This function provides a wrapper for traditional GNU autotools configure scripts,
+ which are commonly used in open-source projects for cross-platform build
+ configuration.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#make_wrapper">make_wrapper (build_dir, make_opts, extra_args, is_build)</a></td>
+	<td class="summary">Execute make commands with parallel build support and installation handling</p>
+
+<p> This function provides a comprehensive wrapper around GNU make, implementing
+ parallel compilation with configurable job limits and load average monitoring
+ to prevent system overload.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ninja_wrapper">ninja_wrapper (build_dir, make_opts, args)</a></td>
+	<td class="summary">Execute Ninja build commands with high-performance parallel compilation</p>
+
+<p> This function provides a wrapper for the Ninja build system, which is designed
+ for fast incremental builds and is commonly used by CMake-generated projects
+ and other modern build systems.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "build"></a>
+    <strong>build (manifest, build_dir, build_type, options)</strong>
+    </dt>
+    <dd>
+    Execute the complete build process for a package</p>
+
+<p> This function orchestrates the entire package build process, setting up the
+ build environment, executing the appropriate build function, and managing
+ build hooks.  It supports both source builds (compiling from source code)
+ and binary builds (installing pre-compiled packages). The function creates
+ a secure build environment with access to wrapper functions for common build
+ tools and handles both successful builds and error conditions gracefully.</p>
+
+<p> The build process includes multiple phases: preparation, building, pre-install,
+ installation, and post-install operations. Each phase can be customized by
+ the package manifest through hooks, allowing for complex build scenarios
+ while maintaining a consistent interface.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+
+<p> table Complete package manifest containing build instructions,</p>
+<pre><code>                   dependencies, and metadata for the package being built
+</code></pre>
+
+        </li>
+        <li><span class="parameter">build_dir</span>
+
+<p> string Absolute path to the temporary build directory where</p>
+<pre><code>                    source code will be extracted and compilation will occur
+</code></pre>
+
+        </li>
+        <li><span class="parameter">build_type</span>
+
+<p> string Type of build to perform: "source" for compiling from</p>
+<pre><code>                      source code, "binary" for installing pre-compiled packages
+</code></pre>
+
+        </li>
+        <li><span class="parameter">options</span>
+
+<p> table Optional build options that can modify build behavior,</p>
+<pre><code>                 enable/disable features, or pass parameters to the build system
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "cmake_wrapper"></a>
+    <strong>cmake_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute CMake configuration commands with flexible argument support</p>
+
+<p> This function provides a wrapper for the CMake build system generator,
+ enabling packages to configure their build environment using CMake's
+ declarative configuration approach.  The wrapper supports passing custom
+ arguments to control build types, installation paths, feature toggles,
+ and other CMake-specific options. It's designed for projects that use
+ CMake's cross-platform build system generation capabilities.</p>
+
+<p> The function handles the initial configuration phase of CMake-based builds,
+ typically used before invoking make or ninja for actual compilation.
+ It integrates seamlessly with pkglet's build environment while providing
+ the flexibility needed for complex CMake configurations.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the source directory containing CMakeLists.txt
+        </li>
+        <li><span class="parameter">args</span>
+
+<p> table Optional array of CMake arguments such as build type, installation prefix,</p>
+<pre><code>              feature flags, and other CMake configuration options
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "configure_wrapper"></a>
+    <strong>configure_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute GNU autotools configure scripts with comprehensive option support</p>
+
+<p> This function provides a wrapper for traditional GNU autotools configure scripts,
+ which are commonly used in open-source projects for cross-platform build
+ configuration.  The wrapper handles the environment setup and execution of
+ configure scripts that detect system capabilities, set build parameters,
+ and generate the appropriate Makefiles for compilation. It supports passing
+ custom arguments for prefix paths, feature selection, dependency paths,
+ and other configure-specific options.</p>
+
+<p> The function is essential for building traditional Unix-style packages that
+ rely on the autoconf/automake build system, providing a standardized
+ interface while maintaining flexibility for complex configuration scenarios.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the source directory containing configure script
+        </li>
+        <li><span class="parameter">args</span>
+
+<p> table Optional array of configure script arguments including installation prefix,</p>
+<pre><code>              feature flags, library paths, and other autotools configuration options
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "make_wrapper"></a>
+    <strong>make_wrapper (build_dir, make_opts, extra_args, is_build)</strong>
+    </dt>
+    <dd>
+    Execute make commands with parallel build support and installation handling</p>
+
+<p> This function provides a comprehensive wrapper around GNU make, implementing
+ parallel compilation with configurable job limits and load average monitoring
+ to prevent system overload.  It automatically detects whether to perform a build
+ operation or installation based on the is_build parameter, with installation
+ automatically redirecting to the configured root directory. The wrapper
+ integrates with pkglet's build configuration system to apply user-defined
+ make options and supports additional arguments for complex build scenarios.</p>
+
+<p> The function is essential for managing system resources during builds while
+ providing the flexibility needed for different package requirements and
+ ensuring proper installation paths are respected during package deployment.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the directory where make command should be executed
+        </li>
+        <li><span class="parameter">make_opts</span>
+
+<p> table Configuration options containing: jobs (parallel build limit),</p>
+<pre><code>                  load (system load threshold), and extra (additional make flags)
+</code></pre>
+
+        </li>
+        <li><span class="parameter">extra_args</span>
+         table Optional array of additional arguments passed directly to make command
+        </li>
+        <li><span class="parameter">is_build</span>
+         boolean True for compilation with parallel jobs, false for installation mode
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ninja_wrapper"></a>
+    <strong>ninja_wrapper (build_dir, make_opts, args)</strong>
+    </dt>
+    <dd>
+    Execute Ninja build commands with high-performance parallel compilation</p>
+
+<p> This function provides a wrapper for the Ninja build system, which is designed
+ for fast incremental builds and is commonly used by CMake-generated projects
+ and other modern build systems.  Ninja excels at parallel execution and minimal
+ rebuild overhead, making it ideal for large projects and continuous integration
+ environments. The wrapper integrates with pkglet's parallel build configuration
+ to respect job limits and load average thresholds while maximizing build speed.</p>
+
+<p> The function is particularly useful for projects that generate Ninja build
+ files, offering superior performance over traditional make for incremental
+ builds while maintaining compatibility with pkglet's resource management.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the directory containing build.ninja file
+        </li>
+        <li><span class="parameter">make_opts</span>
+
+<p> table Configuration for parallel execution including jobs limit</p>
+<pre><code>                  and load average threshold to prevent system overload
+</code></pre>
+
+        </li>
+        <li><span class="parameter">args</span>
+
+<p> table Optional array of additional ninja arguments for specific targets</p>
+<pre><code>              or special build modes like clean or verbose output
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

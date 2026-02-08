@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>pkglet - Hybrid Package Manager Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>pkglet</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/builder.html">builder</a></li>
+  <li><strong>cli</strong></li>
+  <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/example-manifest.html">example-manifest</a></li>
+  <li><a href="../modules/fetcher.html">fetcher</a></li>
+  <li><a href="../modules/installer.html">installer</a></li>
+  <li><a href="../modules/loader.html">loader</a></li>
+  <li><a href="../modules/resolver.html">resolver</a></li>
+  <li><a href="../modules/search.html">search</a></li>
+  <li><a href="../modules/sync.html">sync</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>cli</code></h1>
+<p>Command line interface module for parsing and handling user input</p>
+
+<p> This module provides comprehensive command line parsing capabilities for the pkglet
+ package manager.</p>
+<p> It handles all supported commands, options, and arguments, converting
+ raw command line input into a structured format that the rest of the application
+ can process. The parser supports various flag formats, package options, and special
+ modes like bootstrap installation. It's designed to be robust and user-friendly,
+ providing clear parsing for complex command structures while maintaining compatibility
+ with common package manager interface patterns.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#parse">parse (args)</a></td>
+	<td class="summary">Parse command line arguments into structured command data</p>
+
+<p> This function processes raw command line arguments and converts them into a
+ structured table containing commands, packages, options, and parameters.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#print_help">print_help ()</a></td>
+	<td class="summary">Display comprehensive help information to the user</p>
+
+<p> This function prints detailed usage instructions covering all available commands,
+ supported options, and practical examples.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "parse"></a>
+    <strong>parse (args)</strong>
+    </dt>
+    <dd>
+
+<p>Parse command line arguments into structured command data</p>
+
+<p> This function processes raw command line arguments and converts them into a
+ structured table containing commands, packages, options, and parameters.  It handles
+ various argument formats including flags, key-value pairs, and positional arguments.
+ The parser supports build type selection (--source, --binary), bootstrap targets,
+ and arbitrary package-specific options that get passed through to the build system.</p>
+
+<p> The function follows a specific parsing order: command first, then package name,
+ then query/extra arguments, with options being processed as they appear.
+ This predictable behavior ensures consistent command interpretation.</p>
+
+<pre><code>           build_from, options, and bootstrap_to
+</code></pre>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">args</span>
+         table Raw command line arguments array (usually from arg table)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table Structured command data containing fields: command, package, query,
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "print_help"></a>
+    <strong>print_help ()</strong>
+    </dt>
+    <dd>
+    Display comprehensive help information to the user</p>
+
+<p> This function prints detailed usage instructions covering all available commands,
+ supported options, and practical examples.  The help output is formatted for
+ readability and includes descriptions of installation commands, search operations,
+ repository synchronization, and package information queries. It also documents
+ various option formats including build type selection, bootstrap targets,
+ and package-specific configuration options.</p>
+
+<p> The help system is designed to be self-contained and comprehensive, allowing
+ users to understand the full capabilities of pkglet without needing external
+ documentation. Examples show common usage patterns and advanced features.
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

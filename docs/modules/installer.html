@@ -1,0 +1,337 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>pkglet - Hybrid Package Manager Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>pkglet</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/builder.html">builder</a></li>
+  <li><a href="../modules/cli.html">cli</a></li>
+  <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/example-manifest.html">example-manifest</a></li>
+  <li><a href="../modules/fetcher.html">fetcher</a></li>
+  <li><strong>installer</strong></li>
+  <li><a href="../modules/loader.html">loader</a></li>
+  <li><a href="../modules/resolver.html">resolver</a></li>
+  <li><a href="../modules/search.html">search</a></li>
+  <li><a href="../modules/sync.html">sync</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>installer</code></h1>
+<p>Package installation module</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#determine_build_type">determine_build_type (manifest, preference)</a></td>
+	<td class="summary">Determine optimal build type based on user preference and package availability
+ This function implements intelligent build type selection that balances user preferences
+ with package capabilities.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#install">install (manifest, args)</a></td>
+	<td class="summary">Install a package from manifest with comprehensive dependency resolution and build orchestration
+ This function is the core installation routine that handles the complete package lifecycle
+ from source acquisition to final installation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#merge_options">merge_options (manifest, cli_options)</a></td>
+	<td class="summary">Merge and prioritize configuration options from multiple sources
+ This function implements a sophisticated option merging system that combines default
+ values from package manifests, global configuration settings, and command-line overrides.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#record_installation">record_installation (manifest)</a></td>
+	<td class="summary">Record package installation metadata in the package database
+ This function creates a persistent record of package installations for tracking,
+ dependency management, and system maintenance.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_files">remove_files (manifest)</a></td>
+	<td class="summary">Remove all files installed by a package during uninstallation process
+ This function handles the actual file removal for package uninstallation, ensuring
+ that all files, directories, and artifacts created during installation are properly
+ cleaned up.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_installation_record">remove_installation_record (manifest)</a></td>
+	<td class="summary">Remove package installation record from the package database during uninstallation
+ This function cleans up the package database by removing the installation record
+ for the specified package.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#uninstall">uninstall (manifest)</a></td>
+	<td class="summary">Uninstall a package with custom hook support and thorough cleanup
+ This function handles complete package removal with support for custom uninstall hooks
+ that packages can define for specialized cleanup procedures.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "determine_build_type"></a>
+    <strong>determine_build_type (manifest, preference)</strong>
+    </dt>
+    <dd>
+    Determine optimal build type based on user preference and package availability
+ This function implements intelligent build type selection that balances user preferences
+ with package capabilities.  When set to "auto", it prioritizes binary packages for faster
+ installation but falls back to source compilation when binaries aren't available. This
+ approach provides the best user experience by minimizing build times while ensuring
+ all packages remain installable regardless of pre-compiled binary availability.
+ The function is critical for supporting both development and production deployment
+ scenarios with different performance requirements.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest containing available source and binary specifications
+        </li>
+        <li><span class="parameter">preference</span>
+         string User's preferred build type: "source" for compilation, "binary" for pre-compiled packages, or "auto" for automatic selection
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string The final determined build type that will be used for installation
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "install"></a>
+    <strong>install (manifest, args)</strong>
+    </dt>
+    <dd>
+    Install a package from manifest with comprehensive dependency resolution and build orchestration
+ This function is the core installation routine that handles the complete package lifecycle
+ from source acquisition to final installation.  It supports bootstrap mode for system-level
+ installations, performs conflict detection, resolves dependencies recursively, determines
+ optimal build strategies, merges configuration options, and records installation metadata.
+ The function orchestrates multiple subsystems including fetching, building, and database
+ management to ensure reliable and reproducible package installations across different
+ environments and configurations.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Complete package manifest containing metadata, dependencies, sources, and build instructions
+        </li>
+        <li><span class="parameter">args</span>
+         table Installation arguments including bootstrap options, build preferences, and custom configuration overrides
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "merge_options"></a>
+    <strong>merge_options (manifest, cli_options)</strong>
+    </dt>
+    <dd>
+    Merge and prioritize configuration options from multiple sources
+ This function implements a sophisticated option merging system that combines default
+ values from package manifests, global configuration settings, and command-line overrides.
+ It follows a clear precedence hierarchy where CLI options override global settings,
+ which in turn override manifest defaults. The function handles boolean conversion
+ from string values and ensures that all option types are properly normalized for
+ consistent behavior across different configuration sources. This system enables
+ flexible package customization while maintaining predictable configuration behavior.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest containing default option definitions and values
+        </li>
+        <li><span class="parameter">cli_options</span>
+         table Command-line options that take highest precedence in the merge hierarchy
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table Final merged options with all sources combined and properly typed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "record_installation"></a>
+    <strong>record_installation (manifest)</strong>
+    </dt>
+    <dd>
+    Record package installation metadata in the package database
+ This function creates a persistent record of package installations for tracking,
+ dependency management, and system maintenance.  It stores essential metadata
+ including package name, version, and installation timestamp in a simple key-value
+ format that can be easily queried by other system components. The database
+ records are critical for determining installed status, managing updates, and
+ providing audit trails for system administration and security compliance.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest containing name, version, and other metadata to be recorded
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_files"></a>
+    <strong>remove_files (manifest)</strong>
+    </dt>
+    <dd>
+    Remove all files installed by a package during uninstallation process
+ This function handles the actual file removal for package uninstallation, ensuring
+ that all files, directories, and artifacts created during installation are properly
+ cleaned up.  This is a critical component of the uninstallation process that must
+ be thorough to prevent leftover files from accumulating and potentially causing
+ conflicts or system issues. The function is designed to work with package manifests
+ that track installed files and can be extended to support more sophisticated
+ file tracking and removal strategies for complex packages.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest containing information about installed files and directories to remove
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_installation_record"></a>
+    <strong>remove_installation_record (manifest)</strong>
+    </dt>
+    <dd>
+    Remove package installation record from the package database during uninstallation
+ This function cleans up the package database by removing the installation record
+ for the specified package.  This is essential for maintaining database integrity
+ and ensuring that the system correctly reflects the current installation state.
+ The removal is typically performed during uninstallation operations and prevents
+ stale records from interfering with future installation attempts or dependency
+ resolution. The function uses a simple file deletion approach matching the
+ record creation mechanism for consistency.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest whose installation record should be removed
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "uninstall"></a>
+    <strong>uninstall (manifest)</strong>
+    </dt>
+    <dd>
+    Uninstall a package with custom hook support and thorough cleanup
+ This function handles complete package removal with support for custom uninstall hooks
+ that packages can define for specialized cleanup procedures.  It checks installation
+ status, executes pre-uninstall hooks for preparation, removes installed files,
+ runs post-uninstall hooks for final cleanup, and removes installation records.
+ The hook system allows packages to perform complex uninstallation operations
+ such as stopping services, cleaning up configuration files, or reverting system
+ changes while ensuring no remnants remain after removal.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest containing uninstall hooks and metadata for proper cleanup
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

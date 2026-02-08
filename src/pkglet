@@ -1,0 +1,47 @@
+#!/usr/bin/env lua
+local PKGLET_LIB = "/usr/lib/pkglet"
+package.path = PKGLET_LIB .. "/?.lua;" .. package.path
+local cli = require("cli")
+local loader = require("loader")
+local installer = require("installer")
+local resolver = require("resolver")
+local config = require("config")
+local function main()
+    config.init()
+    local args = cli.parse(arg)
+    if args.command == "i" then
+        local manifest = loader.load_manifest(args.package)
+        local deps = resolver.resolve_dependencies(manifest)
+        for _, dep in ipairs(deps) do
+            local dep_manifest = loader.load_manifest(dep)
+            installer.install(dep_manifest, args)
+        end
+        installer.install(manifest, args)
+
+    elseif args.command == "u" then
+        local manifest = loader.load_manifest(args.package)
+        installer.uninstall(manifest)
+
+    elseif args.command == "s" then
+        local search = require("search")
+        search.query(args.query)
+
+    elseif args.command == "S" then
+        local sync = require("sync")
+        sync.update_repos()
+
+    elseif args.command == "I" then
+        local manifest = loader.load_manifest(args.package)
+        loader.print_info(manifest)
+
+    else
+        cli.print_help()
+        os.exit(1)
+    end
+end
+
+local status, err = pcall(main)
+if not status then
+    io.stderr:write("pkglet: error: " .. tostring(err) .. "\n")
+    os.exit(1)
+end

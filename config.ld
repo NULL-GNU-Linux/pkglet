@@ -1,0 +1,11 @@
+project = 'pkglet'
+title = 'pkglet - Hybrid Package Manager Documentation'
+description = 'Documentation for pkglet, the hybrid package manager for NULL'
+file={'./src/'}
+format = 'markdown'
+style="./doc_template/"
+not_luadoc = true
+all = true
+dir='docs'
+sort=true
+sort_modules=true

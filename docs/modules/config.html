@@ -1,0 +1,339 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>pkglet - Hybrid Package Manager Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>pkglet</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/builder.html">builder</a></li>
+  <li><a href="../modules/cli.html">cli</a></li>
+  <li><strong>config</strong></li>
+  <li><a href="../modules/example-manifest.html">example-manifest</a></li>
+  <li><a href="../modules/fetcher.html">fetcher</a></li>
+  <li><a href="../modules/installer.html">installer</a></li>
+  <li><a href="../modules/loader.html">loader</a></li>
+  <li><a href="../modules/resolver.html">resolver</a></li>
+  <li><a href="../modules/search.html">search</a></li>
+  <li><a href="../modules/sync.html">sync</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>config</code></h1>
+<p>Configuration management module for pkglet system settings and paths</p>
+
+<p> This module centralizes all configuration management for the pkglet package manager,
+ including filesystem paths, repository configurations, package options, and system
+ settings.</p>
+<p> It handles dynamic configuration loading from various config files and
+ environment variables, allowing for flexible system deployment. The module manages
+ directory creation, configuration file parsing, and runtime configuration updates
+ that support bootstrap installations and custom deployment scenarios.</p>
+
+<p> Configuration is loaded from multiple sources: environment variables for paths,
+ configuration files for repositories and package settings, and runtime modifications
+ for bootstrap operations. This layered approach provides both system-wide defaults
+ and user-specific customizations.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#init">init ()</a></td>
+	<td class="summary">Initialize the entire configuration system and create necessary directories</p>
+
+<p> This function performs one-time initialization of the pkglet configuration system
+ by creating all required directories (database, build, and distfiles directories)
+ and loading configuration from various files.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#load_masks">load_masks ()</a></td>
+	<td class="summary">Load package mask list from the package.mask configuration file</p>
+
+<p> This function reads the package mask file to identify packages that should
+ not be installed or updated.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#load_package_options">load_package_options ()</a></td>
+	<td class="summary">Load package-specific build options from the package.opts directory structure</p>
+
+<p> This function scans the package options directory for individual package option
+ files and loads them into the config.package_options table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#load_repos">load_repos ()</a></td>
+	<td class="summary">Load repository configuration from the repos.conf file</p>
+
+<p> This function parses the repository configuration file to populate the
+ config.repos table with available package repositories.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#opts">opts</a></td>
+	<td class="summary">Retrieve make system configuration options for parallel builds</p>
+
+<p> This function loads make configuration from the make.lua file, providing
+ build system parameters that control parallel compilation and resource usage.</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#PREFIX">PREFIX</a></td>
+	<td class="summary">Configure system for bootstrap installation mode</p>
+
+<p> This function updates all path configurations to point to a bootstrap root
+ directory, enabling pkglet to install packages to an alternate filesystem
+ hierarchy.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "init"></a>
+    <strong>init ()</strong>
+    </dt>
+    <dd>
+    Initialize the entire configuration system and create necessary directories</p>
+
+<p> This function performs one-time initialization of the pkglet configuration system
+ by creating all required directories (database, build, and distfiles directories)
+ and loading configuration from various files.  It establishes the runtime
+ environment needed for package operations, ensuring that all paths exist and
+ configuration data is available before any package operations begin.</p>
+
+<p> The initialization process is critical for system startup and must be called
+ before any other pkglet operations to ensure the system is in a consistent state.
+ It creates directories with proper permissions and loads repository information,
+ package options, and package masks from their respective configuration files.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "load_masks"></a>
+    <strong>load_masks ()</strong>
+    </dt>
+    <dd>
+    Load package mask list from the package.mask configuration file</p>
+
+<p> This function reads the package mask file to identify packages that should
+ not be installed or updated.  Package masking is a critical safety feature
+ that prevents problematic packages from being installed, whether due to
+ known bugs, security issues, or system incompatibilities. The mask list
+ provides administrators with fine-grained control over package availability.</p>
+
+<p> Each line in the mask file represents a package name pattern that should
+ be blocked. The function supports comment lines starting with # for
+ documentation and ignores empty lines, making the mask file maintainable
+ and self-documenting.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "load_package_options"></a>
+    <strong>load_package_options ()</strong>
+    </dt>
+    <dd>
+    Load package-specific build options from the package.opts directory structure</p>
+
+<p> This function scans the package options directory for individual package option
+ files and loads them into the config.package_options table.  Each file in the
+ directory corresponds to a specific package and contains build options that
+ should be applied when that package is built. The system supports flexible
+ per-package configuration while maintaining clean separation of settings.</p>
+
+<p> Options are stored as a table of boolean flags for each package, enabling
+ conditional build behavior based on user preferences or system requirements.
+ The function handles missing directories gracefully and ignores non-parseable
+ content, ensuring robust operation in various deployment scenarios.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "load_repos"></a>
+    <strong>load_repos ()</strong>
+    </dt>
+    <dd>
+    Load repository configuration from the repos.conf file</p>
+
+<p> This function parses the repository configuration file to populate the
+ config.repos table with available package repositories.  The configuration
+ file uses a simple format with each line containing a repository name
+ followed by its filesystem path. Lines starting with # are treated as
+ comments and ignored, allowing for documentation within the config file.</p>
+
+<p> The function handles missing files gracefully by returning early if
+ the repos.conf file doesn't exist, which allows the system to function
+ in minimal configurations or during initial setup.
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "opts"></a>
+    <strong>opts</strong>
+    </dt>
+    <dd>
+
+<p>Retrieve make system configuration options for parallel builds</p>
+
+<p> This function loads make configuration from the make.lua file, providing
+ build system parameters that control parallel compilation and resource usage.
+ The configuration supports job count limits for parallel builds, load average
+ thresholds to prevent system overload, and custom make arguments for special
+ build requirements. These settings are essential for optimizing build performance
+ while maintaining system stability.</p>
+
+<p> The function returns sensible defaults if no configuration file exists,
+ ensuring that the build system remains functional in minimal installations.
+ The Lua-based configuration allows for complex conditional logic and dynamic
+ parameter calculation based on system capabilities.</p>
+
+<pre><code>           load (load average threshold), and extra (additional make arguments)
+</code></pre>
+
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">jobs</span>
+
+
+
+        </li>
+        <li><span class="parameter">load</span>
+
+
+
+        </li>
+        <li><span class="parameter">extra</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "PREFIX"></a>
+    <strong>PREFIX</strong>
+    </dt>
+    <dd>
+    Configure system for bootstrap installation mode</p>
+
+<p> This function updates all path configurations to point to a bootstrap root
+ directory, enabling pkglet to install packages to an alternate filesystem
+ hierarchy.  Bootstrap mode is essential for system installation, container
+ creation, and recovery operations where packages must be installed to a
+ temporary or target root rather than the running system.</p>
+
+<p> The function updates all derived paths to maintain consistency, ensuring
+ that database, cache, and configuration operations use the bootstrap
+ location. This allows for complete system isolation during installation
+ while preserving full package manager functionality.
+
+
+    <ul>
+        <li><span class="parameter">path</span>
+
+<p> string The target root directory for bootstrap installation,</p>
+<pre><code>               which will become the new base for all pkglet operations
+</code></pre>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

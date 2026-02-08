@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>pkglet - Hybrid Package Manager Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>pkglet</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/builder.html">builder</a></li>
+  <li><a href="../modules/cli.html">cli</a></li>
+  <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/example-manifest.html">example-manifest</a></li>
+  <li><strong>fetcher</strong></li>
+  <li><a href="../modules/installer.html">installer</a></li>
+  <li><a href="../modules/loader.html">loader</a></li>
+  <li><a href="../modules/resolver.html">resolver</a></li>
+  <li><a href="../modules/search.html">search</a></li>
+  <li><a href="../modules/sync.html">sync</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>fetcher</code></h1>
+<p>Source fetching module</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#fetch">fetch (source_spec, build_dir)</a></td>
+	<td class="summary">Fetch source based on specification from remote repositories
+ This function serves as the main entry point for source acquisition in the pkglet system.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fetch_file">fetch_file (spec, build_dir)</a></td>
+	<td class="summary">Download individual file from remote URL with caching support
+ This function handles downloading single files from remote locations, implementing
+ the same caching mechanism as archives to avoid redundant downloads.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fetch_git">fetch_git (spec, build_dir)</a></td>
+	<td class="summary">Clone git repository with support for specific commits, tags, or branches
+ This function handles cloning git repositories from remote URLs, providing flexibility
+ to checkout specific commits, tags, or branches for reproducible builds.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fetch_tar">fetch_tar (spec, build_dir)</a></td>
+	<td class="summary">Fetch and extract tar archive from remote URL with intelligent format detection
+ This function handles downloading and extracting compressed archives in various formats
+ including tar.gz, tar.bz2, tar.xz, and zip files.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#file_exists">file_exists (path)</a></td>
+	<td class="summary">Check if file exists at the specified path using safe file operations
+ This utility function provides a reliable method to test file existence without
+ generating errors or exceptions.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "fetch"></a>
+    <strong>fetch (source_spec, build_dir)</strong>
+    </dt>
+    <dd>
+    Fetch source based on specification from remote repositories
+ This function serves as the main entry point for source acquisition in the pkglet system.
+ It dispatches to appropriate fetch handlers based on the source type, supporting tar archives,
+ git repositories, and individual files. The function ensures that sources are downloaded
+ to a centralized cache and extracted to the specified build directory for subsequent
+ compilation and installation steps.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">source_spec</span>
+         table Source specification containing type, url, and optional metadata like checksums, commits, or tags
+        </li>
+        <li><span class="parameter">build_dir</span>
+         string Target build directory path where sources will be extracted and prepared for compilation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string The build directory path where sources were successfully extracted
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fetch_file"></a>
+    <strong>fetch_file (spec, build_dir)</strong>
+    </dt>
+    <dd>
+    Download individual file from remote URL with caching support
+ This function handles downloading single files from remote locations, implementing
+ the same caching mechanism as archives to avoid redundant downloads.  It's particularly
+ useful for packages that consist of single files or patches that need to be applied
+ during the build process. The downloaded file is copied to the build directory,
+ maintaining the original filename while ensuring it's available for subsequent
+ build steps without requiring network access during the actual compilation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         table File specification containing the remote URL to download
+        </li>
+        <li><span class="parameter">build_dir</span>
+         string Target directory where the downloaded file will be copied for building
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string The build directory path containing the downloaded file
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fetch_git"></a>
+    <strong>fetch_git (spec, build_dir)</strong>
+    </dt>
+    <dd>
+    Clone git repository with support for specific commits, tags, or branches
+ This function handles cloning git repositories from remote URLs, providing flexibility
+ to checkout specific commits, tags, or branches for reproducible builds.  It creates
+ a clean clone in the specified build directory and automatically switches to the
+ requested revision if specified. This ensures that package builds use exactly the
+ intended source code version, which is critical for security and reproducibility
+ in package management systems.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         table Git repository specification containing url, optional commit hash, or tag name
+        </li>
+        <li><span class="parameter">build_dir</span>
+         string Target directory where the git repository will be cloned for building
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string The build directory path containing the cloned git repository
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fetch_tar"></a>
+    <strong>fetch_tar (spec, build_dir)</strong>
+    </dt>
+    <dd>
+    Fetch and extract tar archive from remote URL with intelligent format detection
+ This function handles downloading and extracting compressed archives in various formats
+ including tar.gz, tar.bz2, tar.xz, and zip files.  It implements caching to avoid
+ re-downloading the same archive and automatically detects the compression format
+ based on file extension. The extraction process strips the top-level directory
+ to ensure a clean build structure, which is essential for consistent compilation
+ across different upstream archive layouts.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         table Archive specification containing url and optional checksum for verification
+        </li>
+        <li><span class="parameter">build_dir</span>
+         string Target directory where archive contents will be extracted for building
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string The build directory path containing the extracted archive contents
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "file_exists"></a>
+    <strong>file_exists (path)</strong>
+    </dt>
+    <dd>
+    Check if file exists at the specified path using safe file operations
+ This utility function provides a reliable method to test file existence without
+ generating errors or exceptions.  It attempts to open the file in read mode and
+ immediately closes it, which is a cross-platform compatible approach to check
+ both file existence and readability. This function is used throughout the
+ fetching system to determine whether cached files need to be downloaded or
+ if they can be reused from previous operations.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">path</span>
+         string Absolute or relative file path to check for existence
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean True if the file exists and is readable, false otherwise
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

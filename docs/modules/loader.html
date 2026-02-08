@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>pkglet - Hybrid Package Manager Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>pkglet</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/builder.html">builder</a></li>
+  <li><a href="../modules/cli.html">cli</a></li>
+  <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/example-manifest.html">example-manifest</a></li>
+  <li><a href="../modules/fetcher.html">fetcher</a></li>
+  <li><a href="../modules/installer.html">installer</a></li>
+  <li><strong>loader</strong></li>
+  <li><a href="../modules/resolver.html">resolver</a></li>
+  <li><a href="../modules/search.html">search</a></li>
+  <li><a href="../modules/sync.html">sync</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>loader</code></h1>
+<p>Package manifest loading module</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#find_manifest">find_manifest (package_name)</a></td>
+	<td class="summary">Locate package manifest file across all configured repositories
+ This function searches through all registered repositories to find the manifest file
+ for a specified package.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#load_manifest">load_manifest (package_name)</a></td>
+	<td class="summary">Load, parse, and validate package manifest with sandboxed execution environment
+ This function provides secure manifest loading by executing manifest files in a
+ controlled environment with limited global access.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#print_info">print_info (manifest)</a></td>
+	<td class="summary">Display comprehensive package information in a formatted, human-readable layout
+ This function presents package metadata in a structured format suitable for
+ command-line display and package browsing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#validate_manifest">validate_manifest (manifest)</a></td>
+	<td class="summary">Validate manifest structure, required fields, and system constraints
+ This function performs comprehensive validation of package manifests to ensure
+ they meet the minimum requirements for package management.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "find_manifest"></a>
+    <strong>find_manifest (package_name)</strong>
+    </dt>
+    <dd>
+    Locate package manifest file across all configured repositories
+ This function searches through all registered repositories to find the manifest file
+ for a specified package.  It converts package names using dot notation to filesystem
+ paths, allowing for hierarchical package organization. The search proceeds through
+ repositories in the order they're configured, returning the first match found.
+ This mechanism enables package discovery across multiple sources while supporting
+ both flat and nested directory structures for optimal package organization.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string The full package name using dot notation (e.g., "org.example.package")
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string Absolute path to the found manifest file or throws error if not found
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "load_manifest"></a>
+    <strong>load_manifest (package_name)</strong>
+    </dt>
+    <dd>
+    Load, parse, and validate package manifest with sandboxed execution environment
+ This function provides secure manifest loading by executing manifest files in a
+ controlled environment with limited global access.  It creates a sandboxed namespace
+ that provides package-specific functions while protecting the system from potentially
+ malicious manifest code. The function validates required fields, checks for package
+ masking, and enriches the manifest with metadata like source path and environment.
+ This approach enables flexible manifest syntax while maintaining security and
+ consistency across the package ecosystem.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string The full package name to locate and load
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table Complete validated manifest object with enriched metadata and environment
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "print_info"></a>
+    <strong>print_info (manifest)</strong>
+    </dt>
+    <dd>
+    Display comprehensive package information in a formatted, human-readable layout
+ This function presents package metadata in a structured format suitable for
+ command-line display and package browsing.  It shows essential information
+ including name, version, description, maintainer, license, and homepage,
+ followed by dependency information, conflicts, and provides relationships.
+ The function also displays available build options with their default values
+ and descriptions, enabling users to understand package capabilities and
+ configuration possibilities before installation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Complete package manifest containing all metadata to display
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "validate_manifest"></a>
+    <strong>validate_manifest (manifest)</strong>
+    </dt>
+    <dd>
+    Validate manifest structure, required fields, and system constraints
+ This function performs comprehensive validation of package manifests to ensure
+ they meet the minimum requirements for package management.  It checks for all
+ required metadata fields including name, version, description, and license,
+ and verifies that the package is not masked by system configuration. This
+ validation is essential for maintaining package quality and preventing
+ installation of malformed or prohibited packages. The function provides
+ clear error messages to help package authors fix manifest issues.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest object to validate against system requirements
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

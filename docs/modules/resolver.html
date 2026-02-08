@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>pkglet - Hybrid Package Manager Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>pkglet</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/builder.html">builder</a></li>
+  <li><a href="../modules/cli.html">cli</a></li>
+  <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/example-manifest.html">example-manifest</a></li>
+  <li><a href="../modules/fetcher.html">fetcher</a></li>
+  <li><a href="../modules/installer.html">installer</a></li>
+  <li><a href="../modules/loader.html">loader</a></li>
+  <li><strong>resolver</strong></li>
+  <li><a href="../modules/search.html">search</a></li>
+  <li><a href="../modules/sync.html">sync</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>resolver</code></h1>
+<p>Dependency resolution module</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#is_installed">is_installed (package_name)</a></td>
+	<td class="summary">Check package installation status by querying the package database
+ This function provides a reliable method to determine whether a package is currently
+ installed on the system by checking for the existence of its database record.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#resolve_dependencies">resolve_dependencies (manifest, resolved, seen)</a></td>
+	<td class="summary">Recursively resolve package dependencies with cycle detection and install order calculation
+ This function implements sophisticated dependency resolution that handles complex
+ dependency graphs while preventing infinite loops through cycle detection.</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#manifest">manifest</a></td>
+	<td class="summary">Validate that no conflicting packages are currently installed
+ This function performs conflict resolution by checking the current installation
+ database against the package's declared conflicts list.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "is_installed"></a>
+    <strong>is_installed (package_name)</strong>
+    </dt>
+    <dd>
+    Check package installation status by querying the package database
+ This function provides a reliable method to determine whether a package is currently
+ installed on the system by checking for the existence of its database record.
+ It uses the same naming convention as the installation system, converting package
+ names with dots to hyphens for filesystem compatibility. This function is
+ essential for dependency resolution, conflict detection, and system management
+ operations that need to differentiate between installed and available packages.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string The full package name to check using dot notation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean True if the package is currently installed, false otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "resolve_dependencies"></a>
+    <strong>resolve_dependencies (manifest, resolved, seen)</strong>
+    </dt>
+    <dd>
+    Recursively resolve package dependencies with cycle detection and install order calculation
+ This function implements sophisticated dependency resolution that handles complex
+ dependency graphs while preventing infinite loops through cycle detection.  It
+ traverses the dependency tree depth-first, tracking visited packages to avoid
+ duplication and circular dependencies. The function returns dependencies in the
+ correct order for installation, ensuring that all prerequisites are installed
+ before the packages that depend on them. This is critical for maintaining system
+ consistency and enabling complex multi-package installations.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest whose dependencies need to be resolved
+        </li>
+        <li><span class="parameter">resolved</span>
+         table Accumulator for resolved dependencies in install order (optional, used internally for recursion)
+        </li>
+        <li><span class="parameter">seen</span>
+         table Tracking set to detect cycles and prevent duplicate processing (optional, used internally for recursion)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table Ordered list of package names representing dependencies in correct installation sequence
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "manifest"></a>
+    <strong>manifest</strong>
+    </dt>
+    <dd>
+    Validate that no conflicting packages are currently installed
+ This function performs conflict resolution by checking the current installation
+ database against the package's declared conflicts list.  It prevents installation
+ of packages that would interfere with each other, maintaining system stability
+ and preventing unexpected behavior. Conflicts are common when packages provide
+ alternative implementations of the same functionality or when they modify shared
+ system resources. This check is performed before installation to ensure that
+ the system remains in a consistent state after package operations.
+
+
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest containing the conflicts list to validate against current installations
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
