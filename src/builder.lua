@@ -40,56 +40,66 @@ local config = require("src.config")
 --                     enable/disable features, or pass parameters to the build system
 
 function builder.build(manifest, build_dir, build_type, options)
-    local make_opts = config.get_make_opts()
-    local env = manifest._env
-    env.OPTIONS = options or {}
-    env.make = function(extra_args, is_build)
-        return builder.make_wrapper(build_dir, make_opts, extra_args, is_build)
-    end
-    env.cmake = function(args)
-        return builder.cmake_wrapper(build_dir, args)
-    end
-    env.configure = function(args)
-        return builder.configure_wrapper(build_dir, args)
-    end
-    env.ninja = function(args)
-        return builder.ninja_wrapper(build_dir, make_opts, args)
-    end
-    local build_fn
-    if build_type == "source" then
-        if not manifest.source then
-            error("package has no source build function")
-        end
-        build_fn = manifest.source()
-    else
-        if not manifest.binary then
-            error("package has no binary build function")
-        end
-        build_fn = manifest.binary()
-    end
-    local hooks = {
-        prepare = nil,
-        build = nil,
-        pre_install = nil,
-        install = nil,
-        post_install = nil,
-    }
+	local make_opts = config.get_make_opts()
+	local env = manifest._env
+	env.OPTIONS = options or {}
+	env.make = function(extra_args, is_build)
+		return builder.make_wrapper(build_dir, make_opts, extra_args, is_build)
+	end
+	env.cmake = function(args)
+		return builder.cmake_wrapper(build_dir, args)
+	end
+	env.configure = function(args)
+		return builder.configure_wrapper(build_dir, args)
+	end
+	env.ninja = function(args)
+		return builder.ninja_wrapper(build_dir, make_opts, args)
+	end
+	local build_fn
+	if build_type == "source" then
+		if not manifest.source then
+			error("package has no source build function")
+		end
+		build_fn = manifest.source()
+	else
+		if not manifest.binary then
+			error("package has no binary build function")
+		end
+		build_fn = manifest.binary()
+	end
+	local hooks = {
+		prepare = nil,
+		build = nil,
+		pre_install = nil,
+		install = nil,
+		post_install = nil,
+	}
 
-    local function hook(name)
-        return function(fn)
-            hooks[name] = fn
-        end
-    end
-    build_fn(hook)
-    local old_dir = os.getenv("PWD") or "."
-    os.execute("cd " .. build_dir)
-    if hooks.prepare then hooks.prepare() end
-    if hooks.build then hooks.build() end
-    if hooks.pre_install then hooks.pre_install() end
-    if hooks.install then hooks.install() end
-    if hooks.post_install then hooks.post_install() end
-    os.execute("cd " .. old_dir)
-    return hooks
+	local function hook(name)
+		return function(fn)
+			hooks[name] = fn
+		end
+	end
+	build_fn(hook)
+	local old_dir = os.getenv("PWD") or "."
+	os.execute("cd " .. build_dir)
+	if hooks.prepare then
+		hooks.prepare()
+	end
+	if hooks.build then
+		hooks.build()
+	end
+	if hooks.pre_install then
+		hooks.pre_install()
+	end
+	if hooks.install then
+		hooks.install()
+	end
+	if hooks.post_install then
+		hooks.post_install()
+	end
+	os.execute("cd " .. old_dir)
+	return hooks
 end
 
 --- Execute make commands with parallel build support and installation handling
@@ -112,31 +122,31 @@ end
 -- @param extra_args table Optional array of additional arguments passed directly to make command
 -- @param is_build boolean True for compilation with parallel jobs, false for installation mode
 function builder.make_wrapper(build_dir, make_opts, extra_args, is_build)
-    local cmd = "cd " .. build_dir .. " && make"
-    if is_build == nil or is_build == true then
-        if make_opts.jobs then
-            cmd = cmd .. " -j" .. make_opts.jobs
-        end
-        if make_opts.load then
-            cmd = cmd .. " -l" .. make_opts.load
-        end
-        if make_opts.extra then
-            cmd = cmd .. " " .. make_opts.extra
-        end
-    else
-        cmd = cmd .. " install DESTDIR=" .. config.ROOT
-    end
-    if extra_args then
-        for _, arg in ipairs(extra_args) do
-            cmd = cmd .. " " .. arg
-        end
-    end
+	local cmd = "cd " .. build_dir .. " && make"
+	if is_build == nil or is_build == true then
+		if make_opts.jobs then
+			cmd = cmd .. " -j" .. make_opts.jobs
+		end
+		if make_opts.load then
+			cmd = cmd .. " -l" .. make_opts.load
+		end
+		if make_opts.extra then
+			cmd = cmd .. " " .. make_opts.extra
+		end
+	else
+		cmd = cmd .. " install DESTDIR=" .. config.ROOT
+	end
+	if extra_args then
+		for _, arg in ipairs(extra_args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
 
-    print("-> " .. cmd)
-    local ret = os.execute(cmd)
-    if ret ~= 0 then
-        error("make failed")
-    end
+	print("-> " .. cmd)
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("make failed")
+	end
 end
 
 --- Execute CMake configuration commands with flexible argument support
@@ -157,17 +167,17 @@ end
 -- @param args table Optional array of CMake arguments such as build type, installation prefix,
 --                  feature flags, and other CMake configuration options
 function builder.cmake_wrapper(build_dir, args)
-    local cmd = "cd " .. build_dir .. " && cmake"
-    if args then
-        for _, arg in ipairs(args) do
-            cmd = cmd .. " " .. arg
-        end
-    end
-    print("-> " .. cmd)
-    local ret = os.execute(cmd)
-    if ret ~= 0 then
-        error("cmake failed")
-    end
+	local cmd = "cd " .. build_dir .. " && cmake"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+	print("-> " .. cmd)
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("cmake failed")
+	end
 end
 
 --- Execute GNU autotools configure scripts with comprehensive option support
@@ -188,17 +198,17 @@ end
 -- @param args table Optional array of configure script arguments including installation prefix,
 --                  feature flags, library paths, and other autotools configuration options
 function builder.configure_wrapper(build_dir, args)
-    local cmd = "cd " .. build_dir .. " && ./configure"
-    if args then
-        for _, arg in ipairs(args) do
-            cmd = cmd .. " " .. arg
-        end
-    end
-    print("-> " .. cmd)
-    local ret = os.execute(cmd)
-    if ret ~= 0 then
-        error("configure failed")
-    end
+	local cmd = "cd " .. build_dir .. " && ./configure "
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+	print("-> " .. cmd)
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("configure failed")
+	end
 end
 
 --- Execute Ninja build commands with high-performance parallel compilation
@@ -221,24 +231,24 @@ end
 --                  or special build modes like clean or verbose output
 
 function builder.ninja_wrapper(build_dir, make_opts, args)
-    local cmd = "cd " .. build_dir .. " && ninja"
-    if make_opts.jobs then
-        cmd = cmd .. " -j" .. make_opts.jobs
-    end
-    if make_opts.load then
-        cmd = cmd .. " -l" .. make_opts.load
-    end
-    if args then
-        for _, arg in ipairs(args) do
-            cmd = cmd .. " " .. arg
-        end
-    end
+	local cmd = "cd " .. build_dir .. " && ninja"
+	if make_opts.jobs then
+		cmd = cmd .. " -j" .. make_opts.jobs
+	end
+	if make_opts.load then
+		cmd = cmd .. " -l" .. make_opts.load
+	end
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
 
-    print("-> " .. cmd)
-    local ret = os.execute(cmd)
-    if ret ~= 0 then
-        error("ninja failed")
-    end
+	print("-> " .. cmd)
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("ninja failed")
+	end
 end
 
 return builder

@@ -14,15 +14,15 @@ local config = require("src.config")
 -- @param build_dir string Target build directory path where sources will be extracted and prepared for compilation
 -- @return string The build directory path where sources were successfully extracted
 function fetcher.fetch(source_spec, build_dir)
-    if source_spec.type == "tar" then
-        return fetcher.fetch_tar(source_spec, build_dir)
-    elseif source_spec.type == "git" then
-        return fetcher.fetch_git(source_spec, build_dir)
-    elseif source_spec.type == "file" then
-        return fetcher.fetch_file(source_spec, build_dir)
-    else
-        error("unsupported source type: " .. tostring(source_spec.type))
-    end
+	if source_spec.type == "tar" then
+		return fetcher.fetch_tar(source_spec, build_dir)
+	elseif source_spec.type == "git" then
+		return fetcher.fetch_git(source_spec, build_dir)
+	elseif source_spec.type == "file" then
+		return fetcher.fetch_file(source_spec, build_dir)
+	else
+		error("unsupported source type: " .. tostring(source_spec.type))
+	end
 end
 
 --- Fetch and extract tar archive from remote URL with intelligent format detection
@@ -36,34 +36,34 @@ end
 -- @param build_dir string Target directory where archive contents will be extracted for building
 -- @return string The build directory path containing the extracted archive contents
 function fetcher.fetch_tar(spec, build_dir)
-    local filename = spec.url:match("([^/]+)$")
-    local distfile = config.DISTFILES_PATH .. "/" .. filename
-    if not fetcher.file_exists(distfile) then
-        print("Fetching " .. filename .. "...")
-        local ret = os.execute("wget -O " .. distfile .. " " .. spec.url)
-        if ret ~= 0 then
-            error("failed to download: " .. spec.url)
-        end
-    end
-    os.execute("mkdir -p " .. build_dir)
-    print("Extracting " .. filename .. "...")
-    local extract_cmd
-    if filename:match("%.tar%.gz$") or filename:match("%.tgz$") then
-        extract_cmd = "tar xzf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
-    elseif filename:match("%.tar%.bz2$") or filename:match("%.tbz2$") then
-        extract_cmd = "tar xjf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
-    elseif filename:match("%.tar%.xz$") or filename:match("%.txz$") then
-        extract_cmd = "tar xJf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
-    elseif filename:match("%.zip$") then
-        extract_cmd = "unzip -q " .. distfile .. " -d " .. build_dir
-    else
-        extract_cmd = "tar xf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
-    end
-    local ret = os.execute(extract_cmd)
-    if ret ~= 0 then
-        error("failed to extract: " .. filename)
-    end
-    return build_dir
+	local filename = spec.url:match("([^/]+)$")
+	local distfile = config.DISTFILES_PATH .. "/" .. filename
+	if not fetcher.file_exists(distfile) then
+		print("Fetching " .. filename .. "...")
+		local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
+		if not ok or code ~= 0 then
+			error("failed to download: " .. spec.url)
+		end
+	end
+	os.execute("mkdir -p " .. build_dir)
+	print("Extracting " .. filename .. "...")
+	local extract_cmd
+	if filename:match("%.tar%.gz$") or filename:match("%.tgz$") then
+		extract_cmd = "tar xzf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+	elseif filename:match("%.tar%.bz2$") or filename:match("%.tbz2$") then
+		extract_cmd = "tar xjf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+	elseif filename:match("%.tar%.xz$") or filename:match("%.txz$") then
+		extract_cmd = "tar xJf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+	elseif filename:match("%.zip$") then
+		extract_cmd = "unzip -q " .. distfile .. " -d " .. build_dir
+	else
+		extract_cmd = "tar xf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+	end
+	local ok, _, code = os.execute(extract_cmd)
+	if not ok or code ~= 0 then
+		error("failed to extract: " .. filename)
+	end
+	return build_dir
 end
 
 --- Clone git repository with support for specific commits, tags, or branches
@@ -77,18 +77,18 @@ end
 -- @param build_dir string Target directory where the git repository will be cloned for building
 -- @return string The build directory path containing the cloned git repository
 function fetcher.fetch_git(spec, build_dir)
-    print("Cloning " .. spec.url .. "...")
-    local clone_cmd = "git clone " .. spec.url .. " " .. build_dir
-    if spec.commit then
-        clone_cmd = clone_cmd .. " && cd " .. build_dir .. " && git checkout " .. spec.commit
-    elseif spec.tag then
-        clone_cmd = clone_cmd .. " --branch " .. spec.tag
-    end
-    local ret = os.execute(clone_cmd)
-    if ret ~= 0 then
-        error("failed to clone: " .. spec.url)
-    end
-    return build_dir
+	print("Cloning " .. spec.url .. "...")
+	local clone_cmd = "git clone " .. spec.url .. " " .. build_dir
+	if spec.commit then
+		clone_cmd = clone_cmd .. " && cd " .. build_dir .. " && git checkout " .. spec.commit
+	elseif spec.tag then
+		clone_cmd = clone_cmd .. " --branch " .. spec.tag
+	end
+	local ok, _, code = os.execute(clone_cmd)
+	if not ok or code ~= 0 then
+		error("failed to clone: " .. spec.url)
+	end
+	return build_dir
 end
 
 --- Download individual file from remote URL with caching support
@@ -102,18 +102,18 @@ end
 -- @param build_dir string Target directory where the downloaded file will be copied for building
 -- @return string The build directory path containing the downloaded file
 function fetcher.fetch_file(spec, build_dir)
-    local filename = spec.url:match("([^/]+)$")
-    local distfile = config.DISTFILES_PATH .. "/" .. filename
-    if not fetcher.file_exists(distfile) then
-        print("Fetching " .. filename .. "...")
-        local ret = os.execute("wget -O " .. distfile .. " " .. spec.url)
-        if ret ~= 0 then
-            error("failed to download: " .. spec.url)
-        end
-    end
-    os.execute("mkdir -p " .. build_dir)
-    os.execute("cp " .. distfile .. " " .. build_dir .. "/")
-    return build_dir
+	local filename = spec.url:match("([^/]+)$")
+	local distfile = config.DISTFILES_PATH .. "/" .. filename
+	if not fetcher.file_exists(distfile) then
+		print("Fetching " .. filename .. "...")
+		local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
+		if not ok or code ~= 0 then
+			error("failed to download: " .. spec.url)
+		end
+	end
+	os.execute("mkdir -p " .. build_dir)
+	os.execute("cp " .. distfile .. " " .. build_dir .. "/")
+	return build_dir
 end
 
 --- Check if file exists at the specified path using safe file operations
@@ -126,12 +126,12 @@ end
 -- @param path string Absolute or relative file path to check for existence
 -- @return boolean True if the file exists and is readable, false otherwise
 function fetcher.file_exists(path)
-    local f = io.open(path, "r")
-    if f then
-        f:close()
-        return true
-    end
-    return false
+	local f = io.open(path, "r")
+	if f then
+		f:close()
+		return true
+	end
+	return false
 end
 
 return fetcher

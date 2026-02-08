@@ -23,12 +23,12 @@ local config = require("src.config")
 -- This is typically called during 'pkglet S' command execution to ensure
 -- all package repositories are synchronized with their remote counterparts.
 function sync.update_repos()
-    print("syncing repositories...")
-    for repo_name, repo_path in pairs(config.repos) do
-        print("  " .. repo_name .. " -> " .. repo_path)
-        sync.update_repo(repo_path)
-    end
-    print("sync complete.")
+	print("syncing repositories...")
+	for repo_name, repo_path in pairs(config.repos) do
+		print("  " .. repo_name .. " -> " .. repo_path)
+		sync.update_repo(repo_path)
+	end
+	print("sync complete.")
 end
 
 --- Update a single repository using git pull
@@ -47,17 +47,18 @@ end
 --                         directory that should be updated
 
 function sync.update_repo(repo_path)
-    local git_dir = repo_path .. "/.git"
-    local f = io.open(git_dir .. "/config", "r")
-    if f then
-        f:close()
-        local cmd = "cd " .. repo_path .. " && git pull"
-        local ret = os.execute(cmd)
-        if ret ~= 0 then
-            print("    Warning: failed to update repository")
-        end
-    else
-        print("    Not a git repository, skipping")
-    end
+	local git_dir = repo_path .. "/.git"
+	local f = io.open(git_dir .. "/config", "r")
+	if f then
+		f:close()
+		local cmd = "cd " .. repo_path .. " && git pull"
+		local ok, _, code = os.execute(cmd)
+		if not ok or code ~= 0 then
+			print("    Warning: failed to update repository")
+		end
+	else
+		print("    Not a git repository, skipping")
+	end
 end
+
 return sync
