@@ -114,7 +114,7 @@ pkglet S
 Install to alternate root (useful for cross-compilation or system bootstrapping):
 
 ```bash
-pkglet I gcc --bootstrap-to=/mnt/bootstrap
+pkglet I gcc --bootstrap-to /mnt/bootstrap
 ```
 
 All files will be installed to `/mnt/bootstrap` instead of `/`.
