@@ -93,24 +93,26 @@ USAGE:
     pkglet <command> [options] [package]
 
 COMMANDS:
-    i <package>      Install a package
-    u <package>      Uninstall a package
-    s <query>        Search for packages
-    S                Sync package repositories
-    I <package>      Show package information
+    i/install <package>        Install a package
+    u/uninstall <package>      Uninstall a package
+    s/search <query>           Search for packages
+    S/sync                     Sync package repositories
+    I/info <package>           Show package information
 
 OPTIONS:
-    --source               Build from source
-    --binary               Install binary package
-    --bootstrap-to=<path>  Bootstrap to alternate root
-    --<option>=<value>     Set package option
-    --<flag>               Enable boolean package option
+    --source                   Build from source
+    --binary                   Install binary package
+    --bootstrap-to=<path>      Bootstrap to alternate root
+    --<option>=<value>         Set package option
+    --<flag>                   Enable boolean package option
 
 EXAMPLES:
     pkglet i org.kernel.linux
-    pkglet i org.kernel.linux --source --menuconfig
+    pkglet install org.kernel.linux --source --menuconfig
     pkglet i gcc --bootstrap-to=/mnt/bootstrap
     pkglet u org.kernel.linux
+    pkglet S
+    pkglet s git
 
 LICENSE: MIT
 ]])

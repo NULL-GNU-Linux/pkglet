@@ -9,7 +9,7 @@ local config = require("src.config")
 local function main()
     config.init()
     local args = cli.parse(arg)
-    if args.command == "i" then
+    if args.command == "i" or args.command == "install" then
         local manifest = loader.load_manifest(args.package)
         local deps = resolver.resolve_dependencies(manifest)
         for _, dep in ipairs(deps) do
@@ -18,21 +18,24 @@ local function main()
         end
         installer.install(manifest, args)
 
-    elseif args.command == "u" then
+    elseif args.command == "u" or args.command == "uninstall" then
         local manifest = loader.load_manifest(args.package)
         installer.uninstall(manifest)
 
-    elseif args.command == "s" then
+    elseif args.command == "s" or args.command == "search" then
         local search = require("src.search")
         search.query(args.package)
 
-    elseif args.command == "S" then
+    elseif args.command == "S" or args.command == "sync" then
         local sync = require("src.sync")
         sync.update_repos()
 
-    elseif args.command == "I" then
+    elseif args.command == "I" or args.command == "info" then
         local manifest = loader.load_manifest(args.package)
         loader.print_info(manifest)
+
+    elseif args.command == "c" or args.command == "clean" then
+        os.execute("rm -rf " .. config.CACHE_PATH)
 
     else
         cli.print_help()
