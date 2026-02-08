@@ -24,7 +24,7 @@ local function main()
 
     elseif args.command == "s" then
         local search = require("src.search")
-        search.query(args.query)
+        search.query(args.package)
 
     elseif args.command == "S" then
         local sync = require("src.sync")
