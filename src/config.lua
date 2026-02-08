@@ -153,6 +153,7 @@ end
 --
 -- @return table Configuration options containing: jobs (parallel job count),
 --               load (load average threshold), and extra (additional make arguments)
+function config.get_make_opts()
     local opts = {
         jobs = 1,
         load = 1,
@@ -188,6 +189,8 @@ end
 --
 -- @param path string The target root directory for bootstrap installation,
 --                   which will become the new base for all pkglet operations
+
+function config.set_bootstrap_root(path)
     config.PREFIX = path
     config.ROOT = path .. "/"
     config.DB_PATH = path .. "/var/lib/pkglet"

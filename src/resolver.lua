@@ -65,6 +65,7 @@ end
 -- system resources. This check is performed before installation to ensure that
 -- the system remains in a consistent state after package operations.
 -- @param manifest table Package manifest containing the conflicts list to validate against current installations
+function resolver.check_conflicts(manifest)
     if not manifest.conflicts then
         return
     end
