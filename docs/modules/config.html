@@ -34,8 +34,6 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
-<li><a href="#Tables">Tables</a></li>
-<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -77,6 +75,13 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#get_make_opts">get_make_opts ()</a></td>
+	<td class="summary">Retrieve make system configuration options for parallel builds</p>
+
+<p> This function loads make configuration from the make.lua file, providing
+ build system parameters that control parallel compilation and resource usage.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#init">init ()</a></td>
 	<td class="summary">Initialize the entire configuration system and create necessary directories</p>
 
@@ -105,21 +110,8 @@
 <p> This function parses the repository configuration file to populate the
  config.repos table with available package repositories.</td>
 	</tr>
-</table>
-<h2><a href="#Tables">Tables</a></h2>
-<table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#opts">opts</a></td>
-	<td class="summary">Retrieve make system configuration options for parallel builds</p>
-
-<p> This function loads make configuration from the make.lua file, providing
- build system parameters that control parallel compilation and resource usage.</td>
-	</tr>
-</table>
-<h2><a href="#Fields">Fields</a></h2>
-<table class="function_list">
-	<tr>
-	<td class="name" nowrap><a href="#PREFIX">PREFIX</a></td>
+	<td class="name" nowrap><a href="#set_bootstrap_root">set_bootstrap_root (path)</a></td>
 	<td class="summary">Configure system for bootstrap installation mode</p>
 
 <p> This function updates all path configurations to point to a bootstrap root
@@ -135,6 +127,42 @@
     <h2 class="section-header "><a name="Functions"></a>Functions</h2>
 
     <dl class="function">
+    <dt>
+    <a name = "get_make_opts"></a>
+    <strong>get_make_opts ()</strong>
+    </dt>
+    <dd>
+
+<p>Retrieve make system configuration options for parallel builds</p>
+
+<p> This function loads make configuration from the make.lua file, providing
+ build system parameters that control parallel compilation and resource usage.
+ The configuration supports job count limits for parallel builds, load average
+ thresholds to prevent system overload, and custom make arguments for special
+ build requirements. These settings are essential for optimizing build performance
+ while maintaining system stability.</p>
+
+<p> The function returns sensible defaults if no configuration file exists,
+ ensuring that the build system remains functional in minimal installations.
+ The Lua-based configuration allows for complex conditional logic and dynamic
+ parameter calculation based on system capabilities.</p>
+
+<pre><code>           load (load average threshold), and extra (additional make arguments)
+</code></pre>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table Configuration options containing: jobs (parallel job count),
+    </ol>
+
+
+
+
+</dd>
     <dt>
     <a name = "init"></a>
     <strong>init ()</strong>
@@ -234,66 +262,9 @@
 
 
 </dd>
-</dl>
-    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
-
-    <dl class="function">
     <dt>
-    <a name = "opts"></a>
-    <strong>opts</strong>
-    </dt>
-    <dd>
-
-<p>Retrieve make system configuration options for parallel builds</p>
-
-<p> This function loads make configuration from the make.lua file, providing
- build system parameters that control parallel compilation and resource usage.
- The configuration supports job count limits for parallel builds, load average
- thresholds to prevent system overload, and custom make arguments for special
- build requirements. These settings are essential for optimizing build performance
- while maintaining system stability.</p>
-
-<p> The function returns sensible defaults if no configuration file exists,
- ensuring that the build system remains functional in minimal installations.
- The Lua-based configuration allows for complex conditional logic and dynamic
- parameter calculation based on system capabilities.</p>
-
-<pre><code>           load (load average threshold), and extra (additional make arguments)
-</code></pre>
-
-
-
-    <h3>Fields:</h3>
-    <ul>
-        <li><span class="parameter">jobs</span>
-
-
-
-        </li>
-        <li><span class="parameter">load</span>
-
-
-
-        </li>
-        <li><span class="parameter">extra</span>
-
-
-
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-</dl>
-    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
-
-    <dl class="function">
-    <dt>
-    <a name = "PREFIX"></a>
-    <strong>PREFIX</strong>
+    <a name = "set_bootstrap_root"></a>
+    <strong>set_bootstrap_root (path)</strong>
     </dt>
     <dd>
     Configure system for bootstrap installation mode</p>
@@ -310,6 +281,7 @@
  while preserving full package manager functionality.
 
 
+    <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">path</span>
 
@@ -332,7 +304,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-02-08 18:47:28 </i>
+<i style="float:right;">Last updated 2026-02-08 19:46:08 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
