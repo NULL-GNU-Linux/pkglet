@@ -46,7 +46,7 @@ end
 -- @param package_name string The full package name to check using dot notation
 -- @return boolean True if the package is currently installed, false otherwise
 function resolver.is_installed(package_name)
-    local config = require("config")
+    local config = require("src.config")
     local db_file = config.DB_PATH .. "/" .. package_name:gsub("%.", "-")
     local f = io.open(db_file, "r")
     if f then
