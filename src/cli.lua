@@ -34,6 +34,7 @@ function cli.parse(args)
         build_from = "auto",
         options = {},
         bootstrap_to = nil,
+        noask = false,
     }
 
     if #args == 0 then
@@ -51,6 +52,8 @@ function cli.parse(args)
         elseif arg == "--bootstrap-to" then
             i = i + 1
             parsed.bootstrap_to = args[i]
+        elseif arg == "--noask" then
+            parsed.noask = true
         elseif arg:match("^%-%-") then
             local opt = arg:sub(3)
             local key, value = opt:match("^([^=]+)=(.+)$")
@@ -103,6 +106,7 @@ OPTIONS:
     --source                   Build from source
     --binary                   Install binary package
     --bootstrap-to=<path>      Bootstrap to alternate root
+    --noask                    Skip installation confirmation
     --<option>=<value>         Set package option
     --<flag>                   Enable boolean package option
 
