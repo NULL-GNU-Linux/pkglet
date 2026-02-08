@@ -17,8 +17,9 @@ local config = {}
 config.PREFIX = os.getenv("PKGLET_PREFIX") or ""
 config.ROOT = config.PREFIX .. "/"
 config.DB_PATH = config.PREFIX .. "/var/lib/pkglet"
-config.CACHE_PATH = os.getenv("HOME") .. "/.cache/pkglet"
+config.CACHE_PATH = "/var/cache/pkglet"
 config.BUILD_PATH = config.CACHE_PATH .. "/build"
+config.TEMP_INSTALL_PATH = config.CACHE_PATH .. "/temp_install"
 config.DISTFILES_PATH = config.CACHE_PATH .. "/distfiles"
 config.CONFIG_DIR = "/etc/pkglet"
 config.REPOS_CONF = config.CONFIG_DIR .. "/repos.conf"
@@ -46,6 +47,7 @@ function config.init()
     os.execute("mkdir -p " .. config.DB_PATH)
     os.execute("mkdir -p " .. config.BUILD_PATH)
     os.execute("mkdir -p " .. config.DISTFILES_PATH)
+    os.execute("mkdir -p " .. config.TEMP_INSTALL_PATH)
     config.load_repos()
     config.load_package_options()
     config.load_masks()

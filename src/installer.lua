@@ -29,12 +29,22 @@ function installer.install(manifest, args)
         return
     end
 
+    io.write("Proceed with installation? [Y/n] ")
+    local response = io.read()
+    if response and response:lower():sub(1,1) == 'n' then
+        print("Installation cancelled.")
+        return
+    end
+
     local build_type = installer.determine_build_type(manifest, args.build_from)
     print("Build type: " .. build_type)
     local options = installer.merge_options(manifest, args.options)
     local build_dir = config.BUILD_PATH .. "/" .. manifest.name
+    local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
     os.execute("rm -rf " .. build_dir)
     os.execute("mkdir -p " .. build_dir)
+    os.execute("rm -rf " .. temp_install_dir)
+    os.execute("mkdir -p " .. temp_install_dir)
     local source_spec
     if build_type == "source" then
         source_spec = manifest.sources.source
@@ -45,6 +55,7 @@ function installer.install(manifest, args)
         fetcher.fetch(source_spec, build_dir)
     end
     builder.build(manifest, build_dir, build_type, options)
+    installer.copy_from_temp(manifest)
     installer.record_installation(manifest)
     print("Successfully installed " .. manifest.name)
 end
@@ -197,8 +208,17 @@ end
 -- that track installed files and can be extended to support more sophisticated
 -- file tracking and removal strategies for complex packages.
 -- @param manifest table Package manifest containing information about installed files and directories to remove
+function installer.copy_from_temp(manifest)
+    local temp_path = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
+    local dest_path = config.ROOT
+    print("Copying files from temporary location...")
+    os.execute("cp -r " .. temp_path .. "/* " .. dest_path .. "/")
+end
+
 function installer.remove_files(manifest)
     print("Removing files...")
+    local temp_path = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
+    os.execute("rm -rf " .. temp_path)
 end
 
 return installer

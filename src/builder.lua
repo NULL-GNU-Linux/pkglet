@@ -55,6 +55,12 @@ function builder.build(manifest, build_dir, build_type, options)
 	env.ninja = function(args)
 		return builder.ninja_wrapper(build_dir, make_opts, args)
 	end
+	env.install = function(args)
+		return builder.install_wrapper(build_dir, args)
+	end
+	env.meson = function(args)
+		return builder.meson_wrapper(build_dir, args)
+	end
 	local build_fn
 	if build_type == "source" then
 		if not manifest.source then
@@ -134,7 +140,7 @@ function builder.make_wrapper(build_dir, make_opts, extra_args, is_build)
 			cmd = cmd .. " " .. make_opts.extra
 		end
 	else
-		cmd = cmd .. " install DESTDIR=" .. config.ROOT
+		cmd = cmd .. " DESTDIR=" .. config.TEMP_INSTALL_PATH .. "/" .. build_dir:match("([^/]+)$") .. " install"
 	end
 	if extra_args then
 		for _, arg in ipairs(extra_args) do
@@ -248,6 +254,66 @@ function builder.ninja_wrapper(build_dir, make_opts, args)
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
 		error("ninja failed")
+	end
+end
+
+--- Execute install commands with temporary installation path
+--
+-- This function provides a wrapper for the GNU coreutils install command,
+-- ensuring that files are installed to the temporary installation directory
+-- first before being copied to the final destination. This allows for proper
+-- file tracking and conflict resolution during package installation.
+--
+-- @param build_dir string Absolute path to the directory where install command should be executed
+-- @param args table Optional array of additional arguments passed directly to install command
+function builder.install_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && install"
+	local package_name = build_dir:match("([^/]+)$")
+	local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. package_name
+	if args then
+		local modified_args = {}
+		for i, arg in ipairs(args) do
+			if arg:match("^-t") then
+				modified_args[i] = "-t " .. temp_install_dir
+			elseif arg:match("^--target-directory=") then
+				modified_args[i] = "--target-directory=" .. temp_install_dir
+			else
+				modified_args[i] = arg
+			end
+		end
+		for _, arg in ipairs(modified_args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+
+	print("-> " .. cmd)
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("install failed")
+	end
+end
+
+--- Execute Meson configuration commands with flexible argument support
+--
+-- This function provides a wrapper for the Meson build system, which is
+-- designed for fast and user-friendly configuration of projects. It supports
+-- passing custom arguments for build types, installation paths, feature toggles,
+-- and other Meson-specific options.
+--
+-- @param build_dir string Absolute path to the source directory containing meson.build
+-- @param args table Optional array of Meson arguments such as build type, installation prefix,
+--                  feature flags, and other Meson configuration options
+function builder.meson_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && meson setup"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+	print("-> " .. cmd)
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("meson failed")
 	end
 end
 
