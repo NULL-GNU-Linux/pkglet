@@ -23,11 +23,11 @@ local function main()
         installer.uninstall(manifest)
 
     elseif args.command == "s" then
-        local search = require("search")
+        local search = require("src.search")
         search.query(args.query)
 
     elseif args.command == "S" then
-        local sync = require("sync")
+        local sync = require("src.sync")
         sync.update_repos()
 
     elseif args.command == "I" then
