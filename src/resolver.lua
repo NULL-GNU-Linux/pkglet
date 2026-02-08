@@ -2,7 +2,7 @@
 -- @module resolver
 
 local resolver = {}
-local loader = require("loader")
+local loader = require("src.loader")
 
 --- Recursively resolve package dependencies with cycle detection and install order calculation
 -- This function implements sophisticated dependency resolution that handles complex

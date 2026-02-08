@@ -2,7 +2,7 @@
 -- @module fetcher
 
 local fetcher = {}
-local config = require("config")
+local config = require("src.config")
 
 --- Fetch source based on specification from remote repositories
 -- This function serves as the main entry point for source acquisition in the pkglet system.

@@ -2,7 +2,7 @@
 -- @module loader
 
 local loader = {}
-local config = require("config")
+local config = require("src.config")
 
 --- Locate package manifest file across all configured repositories
 -- This function searches through all registered repositories to find the manifest file

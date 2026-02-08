@@ -14,7 +14,7 @@
 -- @module builder
 
 local builder = {}
-local config = require("config")
+local config = require("src.config")
 
 --- Execute the complete build process for a package
 --

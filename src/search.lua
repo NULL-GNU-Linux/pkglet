@@ -2,8 +2,8 @@
 -- @module search
 
 local search = {}
-local config = require("config")
-local loader = require("loader")
+local config = require("src.config")
+local loader = require("src.loader")
 
 --- Search for packages across all repositories using pattern matching
 -- This function provides comprehensive package search capabilities by scanning
@@ -15,6 +15,7 @@ local loader = require("loader")
 -- The function handles empty patterns by returning all available packages.
 -- @param pattern string Search pattern to match against package names and descriptions,
 --                      can be partial matching and is case-insensitive for descriptions
+function search.query(pattern)
     local results = {}
     for repo_name, repo_path in pairs(config.repos) do
         search.scan_repo(repo_path, pattern, results)
@@ -40,6 +41,8 @@ end
 -- @param repo_path string Filesystem path to the repository directory to scan
 -- @param pattern string Search pattern for matching packages
 -- @param results table Accumulator table where matching packages will be stored
+
+function search.scan_repo(repo_path, pattern, results)
     local cmd = "find " .. repo_path .. " -name manifest.lua"
     local handle = io.popen(cmd)
     if not handle then return end

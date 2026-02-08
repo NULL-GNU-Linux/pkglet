@@ -1,11 +1,11 @@
 #!/usr/bin/env lua
 local PKGLET_LIB = "/usr/lib/pkglet"
 package.path = PKGLET_LIB .. "/?.lua;" .. package.path
-local cli = require("cli")
-local loader = require("loader")
-local installer = require("installer")
-local resolver = require("resolver")
-local config = require("config")
+local cli = require("src.cli")
+local loader = require("src.loader")
+local installer = require("src.installer")
+local resolver = require("src.resolver")
+local config = require("src.config")
 local function main()
     config.init()
     local args = cli.parse(arg)

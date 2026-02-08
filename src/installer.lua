@@ -2,10 +2,10 @@
 -- @module installer
 
 local installer = {}
-local config = require("config")
-local fetcher = require("fetcher")
-local builder = require("builder")
-local resolver = require("resolver")
+local config = require("src.config")
+local fetcher = require("src.fetcher")
+local builder = require("src.builder")
+local resolver = require("src.resolver")
 
 --- Install a package from manifest with comprehensive dependency resolution and build orchestration
 -- This function is the core installation routine that handles the complete package lifecycle
