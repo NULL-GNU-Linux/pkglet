@@ -17,6 +17,10 @@ local loader = require("src.loader")
 --                      can be partial matching and is case-insensitive for descriptions
 function search.query(pattern)
     local results = {}
+    if not config.repos or next(config.repos) == nil then
+        print("No repositories configured. Please check your configuration.")
+        return
+    end
     for repo_name, repo_path in pairs(config.repos) do
         search.scan_repo(repo_path, pattern, results)
     end
@@ -43,6 +47,10 @@ end
 -- @param results table Accumulator table where matching packages will be stored
 
 function search.scan_repo(repo_path, pattern, results)
+    pattern = pattern or ""
+    if not repo_path or repo_path == "" then
+        return
+    end
     local cmd = "find " .. repo_path .. " -name manifest.lua"
     local handle = io.popen(cmd)
     if not handle then return end
@@ -52,17 +60,27 @@ function search.scan_repo(repo_path, pattern, results)
             local ok, manifest = pcall(function()
                 local env = {}
                 setmetatable(env, {__index = _G})
-                local chunk = loadfile(manifest_path, "t", env)
-                if chunk then
-                    chunk()
-                    return env.pkg
+                local chunk, err = loadfile(manifest_path, "t", env)
+                if not chunk then
+                    return nil
                 end
+                chunk()
+                return env.pkg
             end)
-            if ok and manifest and manifest.name then
-                if pattern == "" or
-                   manifest.name:find(pattern, 1, true) or
-                   (manifest.description and manifest.description:lower():find(pattern:lower(), 1, true)) then
-                    table.insert(results, manifest)
+            if ok and manifest then
+                if manifest.name then
+                    local name_match = manifest.name:find(pattern, 1, true)
+                    local desc_match = nil
+                    if manifest.description then
+                        desc_match = manifest.description:lower():find(pattern:lower(), 1, true)
+                    end
+                    if pattern == "" or name_match or desc_match then
+                        table.insert(results, manifest)
+                    end
+                elseif manifest.name then
+                    if pattern == "" or manifest.name:find(pattern, 1, true) then
+                        table.insert(results, manifest)
+                    end
                 end
             end
         end
