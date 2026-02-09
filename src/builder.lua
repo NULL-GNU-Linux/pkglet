@@ -62,6 +62,8 @@ function builder.build(manifest, build_dir, build_type, options)
 		return builder.meson_wrapper(build_dir, args)
 	end
 	env.exec = os.execute
+	env.ROOT = config.ROOT
+	env.CONFIG = config
 	local build_fn
 	if build_type == "source" then
 		if not manifest.source then
