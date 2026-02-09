@@ -89,37 +89,36 @@ end
 -- users to understand the full capabilities of pkglet without needing external
 -- documentation. Examples show common usage patterns and advanced features.
 function cli.print_help()
-    print([[
-pkglet - The hybrid package manager for NULL
-
-USAGE:
-    pkglet <command> [options] [package]
-
-COMMANDS:
-    i/install <package>        Install a package
-    u/uninstall <package>      Uninstall a package
-    s/search <query>           Search for packages
-    S/sync                     Sync package repositories
-    I/info <package>           Show package information
-
-OPTIONS:
-    --source                   Build from source
-    --binary                   Install binary package
-    --bootstrap-to=<path>      Bootstrap to alternate root
-    --noask                    Skip installation confirmation
-    --<option>=<value>         Set package option
-    --<flag>                   Enable boolean package option
-
-EXAMPLES:
-    pkglet i org.kernel.linux
-    pkglet install org.kernel.linux --source --menuconfig
-    pkglet i gcc --bootstrap-to=/mnt/bootstrap
-    pkglet u org.kernel.linux
-    pkglet S
-    pkglet s git
-
-LICENSE: MIT
-]])
+    print("\27[1;32mpkglet\27[0m - The hybrid package manager for NULL\n" ..
+"\n" ..
+"USAGE:\n" ..
+    "\27[1;32mpkglet\27[0m \27[1;37m<command> [options] [package]\27[0m\n" ..
+"\n" ..
+"COMMANDS:\n" ..
+"   \27[1;37mi/install <package>\27[0m        Install a package\n" ..
+"   \27[1;37mu/uninstall <package>\27[0m      Uninstall a package\n" ..
+"   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
+"   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
+"   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
+"\n" ..
+"OPTIONS:\n" ..
+"   \27[1;37m--source\27[0m                   Build from source\n" ..
+"   \27[1;37m--binary\27[0m                   Install binary package\n" ..
+"   \27[1;37m--bootstrap-to=<path>\27[0m      Bootstrap to alternate root\n" ..
+"   \27[1;37m--noask\27[0m                    Skip installation confirmation\n" ..
+"   \27[1;37m--<option>=<value>\27[0m         Set package option\n" ..
+"   \27[1;37m--<flag>\27[0m                   Enable boolean package option\n" ..
+"\n" ..
+"EXAMPLES:\n" ..
+"   pkglet i org.kernel.linux\n" ..
+"   pkglet install org.kernel.linux --source --menuconfig\n" ..
+"   pkglet install gcc --bootstrap-to=/mnt/bootstrap\n" ..
+"   pkglet uninstall org.kernel.linux\n" ..
+"   pkglet uninstall org.kernel.linux --noask\n" ..
+"   pkglet S\n" ..
+"   pkglet s git\n" ..
+"\n" ..
+"LICENSE: \27[1;30mMIT\27[0m\n")
 end
 
 return cli
