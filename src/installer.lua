@@ -41,13 +41,32 @@ function installer.install(manifest, args)
         return
     end
 
-    local packages_to_install = installer.resolve_dependencies(manifest, {})
-
-    print("Packages to install:")
-    for name, version in pairs(packages_to_install) do
-        print("  " .. name .. " " .. version)
+    local packages_to_install
+    
+    if args.nodeps then
+        packages_to_install = {}
+        if not resolver.is_installed(manifest.name) then
+            packages_to_install[manifest.name] = manifest.version
+        end
+    else
+        packages_to_install = installer.resolve_dependencies(manifest, {})
     end
-    print("")
+
+    if installer.count_keys(packages_to_install) > 0 then
+        print("Packages to install:")
+        for name, version in pairs(packages_to_install) do
+            print("  " .. name .. " " .. version)
+        end
+        print("")
+    else
+        if args.nodeps then
+            print("Package already installed.")
+        else
+            print("All dependencies already installed.")
+        end
+        print("")
+        return
+    end
 
     if not args.noask then
         io.write("Proceed with installation? [Y/n] ")

@@ -35,6 +35,7 @@ function cli.parse(args)
         options = {},
         bootstrap_to = nil,
         noask = false,
+        nodeps = false,
     }
 
     if #args == 0 then
@@ -54,6 +55,8 @@ function cli.parse(args)
             parsed.bootstrap_to = args[i]
         elseif arg == "--noask" then
             parsed.noask = true
+        elseif arg == "--nodeps" then
+            parsed.nodeps = true
         elseif arg:match("^%-%-") then
             local opt = arg:sub(3)
             local key, value = opt:match("^([^=]+)=(.+)$")
@@ -106,6 +109,7 @@ function cli.print_help()
 "   \27[1;37m--binary\27[0m                   Install binary package\n" ..
 "   \27[1;37m--bootstrap-to=<path>\27[0m      Bootstrap to alternate root\n" ..
 "   \27[1;37m--noask\27[0m                    Skip installation confirmation\n" ..
+"   \27[1;37m--nodeps\27[0m                    Skip dependency installation\n" ..
 "   \27[1;37m--<option>=<value>\27[0m         Set package option\n" ..
 "   \27[1;37m--<flag>\27[0m                   Enable boolean package option\n" ..
 "\n" ..
