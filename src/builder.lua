@@ -49,8 +49,8 @@ function builder.build(manifest, build_dir, build_type, options)
 	env.cmake = function(args)
 		return builder.cmake_wrapper(build_dir, args)
 	end
-	env.configure = function(args)
-		return builder.configure_wrapper(build_dir, args)
+	env.configure = function(args, name)
+		return builder.configure_wrapper(build_dir, args, name)
 	end
 	env.ninja = function(args)
 		return builder.ninja_wrapper(build_dir, make_opts, args)
@@ -208,8 +208,9 @@ end
 -- @param build_dir string Absolute path to the source directory containing configure script
 -- @param args table Optional array of configure script arguments including installation prefix,
 --                  feature flags, library paths, and other autotools configuration options
-function builder.configure_wrapper(build_dir, args)
-	local cmd = "cd " .. build_dir .. " && ./configure "
+function builder.configure_wrapper(build_dir, args, name)
+    name = name or "configure"
+	local cmd = "cd " .. build_dir .. " && ./" .. name .. " "
 	if args then
 		for _, arg in ipairs(args) do
 			cmd = cmd .. " " .. arg
