@@ -50,6 +50,16 @@ function installer.install(manifest, args)
         end
     else
         packages_to_install = installer.resolve_dependencies(manifest, {})
+        
+        if args.options and args.options.with_optional then
+            print("Installing optional dependencies...")
+            local optional_packages = installer.resolve_optional_dependencies(manifest, {})
+            for name, version in pairs(optional_packages) do
+                if not packages_to_install[name] then
+                    packages_to_install[name] = version
+                end
+            end
+        end
     end
 
     if installer.count_keys(packages_to_install) > 0 then
@@ -289,6 +299,16 @@ function installer.get_dependencies(manifest)
             end
         end
     end
+    if manifest.optional_depends then
+        for _, dep in ipairs(manifest.optional_depends) do
+            if type(dep) == "string" then
+                local parsed = version_module.parse_dependency(dep)
+                deps[parsed.name] = (parsed.constraint or "*") .. ":optional"
+            elseif type(dep) == "table" then
+                deps[dep.name] = ((dep.constraint or "*") .. ":optional")
+            end
+        end
+    end
     return deps
 end
 
@@ -309,31 +329,43 @@ function installer.resolve_dependencies(manifest, visited)
     local deps = installer.get_dependencies(manifest)
     for dep_name, dep_constraint in pairs(deps) do
         local is_build_dep = dep_constraint:match(":build$") ~= nil
+        local is_optional_dep = dep_constraint:match(":optional$") ~= nil
+        
         if is_build_dep then
             dep_constraint = dep_constraint:gsub(":build$", "")
+        elseif is_optional_dep then
+            dep_constraint = dep_constraint:gsub(":optional$", "")
         end
         
         if not resolver.is_installed(dep_name) and not visited[dep_name] then
-            local available_versions = version_module.get_available_versions(dep_name)
-            local selected_version = version_module.highest_satisfying(available_versions, dep_constraint)
-            
-            if not selected_version then
-                error("no satisfying version found for " .. dep_name .. " " .. dep_constraint)
-            end
-            
-            local dep_manifest = loader.load_manifest(dep_name)
-            dep_manifest.version = selected_version
-            local dep_packages = installer.resolve_dependencies(dep_manifest, visited)
-            for name, version in pairs(dep_packages) do
-                packages_to_install[name] = version
-            end
-            if not visited[dep_name] then
-                packages_to_install[dep_name] = selected_version
+            if is_optional_dep then
+                print("Optional dependency " .. dep_name .. " not installed, skipping")
+            else
+                local available_versions = version_module.get_available_versions(dep_name)
+                local selected_version = version_module.highest_satisfying(available_versions, dep_constraint)
+                
+                if not selected_version then
+                    error("no satisfying version found for " .. dep_name .. " " .. dep_constraint)
+                end
+                
+                local dep_manifest = loader.load_manifest(dep_name)
+                dep_manifest.version = selected_version
+                local dep_packages = installer.resolve_dependencies(dep_manifest, visited)
+                for name, version in pairs(dep_packages) do
+                    packages_to_install[name] = version
+                end
+                if not visited[dep_name] then
+                    packages_to_install[dep_name] = selected_version
+                end
             end
         elseif resolver.is_installed(dep_name) then
             local current_version = installer.get_installed_version(dep_name)
             if not version_module.satisfies(dep_constraint, current_version) then
-                error("installed version of " .. dep_name .. " (" .. current_version .. ") does not satisfy constraint " .. dep_constraint)
+                if is_optional_dep then
+                    print("Warning: installed optional dependency " .. dep_name .. " (" .. current_version .. ") does not satisfy constraint " .. dep_constraint)
+                else
+                    error("installed version of " .. dep_name .. " (" .. current_version .. ") does not satisfy constraint " .. dep_constraint)
+                end
             end
         end
     end
@@ -425,6 +457,55 @@ function installer.run_single_hook(manifest, args)
     end
 
     print("Hook '" .. tostring(hook_name) .. "' completed successfully")
+end
+
+--- Resolve optional dependencies (installable but not required)
+-- @param manifest table Package manifest
+-- @param visited table Tracking set to prevent cycles (internal use)
+-- @return table Optional dependencies that could be installed
+function installer.resolve_optional_dependencies(manifest, visited)
+    local version_module = require("src.version")
+    local loader = require("src.loader")
+    visited = visited or {}
+    local optional_packages = {}
+    
+    if visited[manifest.name] then
+        return {}
+    end
+    visited[manifest.name] = true
+    
+    if manifest.optional_depends then
+        for _, dep in ipairs(manifest.optional_depends) do
+            local dep_name, dep_constraint
+            if type(dep) == "string" then
+                local parsed = version_module.parse_dependency(dep)
+                dep_name = parsed.name
+                dep_constraint = parsed.constraint
+            elseif type(dep) == "table" then
+                dep_name = dep.name
+                dep_constraint = dep.constraint or "*"
+            end
+            
+            if not resolver.is_installed(dep_name) and not visited[dep_name] then
+                local available_versions = version_module.get_available_versions(dep_name)
+                local selected_version = version_module.highest_satisfying(available_versions, dep_constraint)
+                
+                if selected_version then
+                    local dep_manifest = loader.load_manifest(dep_name)
+                    dep_manifest.version = selected_version
+                    local dep_optional = installer.resolve_optional_dependencies(dep_manifest, visited)
+                    for name, version in pairs(dep_optional) do
+                        optional_packages[name] = version
+                    end
+                    if not visited[dep_name] then
+                        optional_packages[dep_name] = selected_version
+                    end
+                end
+            end
+        end
+    end
+    
+    return optional_packages
 end
 
 --- Get installed version of a package

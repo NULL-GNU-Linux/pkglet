@@ -92,8 +92,12 @@ org.gnu.gcc 11.2.0
 pkglet i org.kernel.linux
 pkglet i org.kernel.linux --source
 pkglet i org.kernel.linux --menuconfig
+pkglet i org.kernel.linux --with-optional
 pkglet i org.kernel.linux --to 6.17.5
 ```
+
+**Optional Dependencies:**
+Use `--with-optional` to install optional dependencies that enhance functionality but aren't required for core operation.
 
 ### Upgrade Package
 
@@ -313,6 +317,17 @@ build_depends = {
 }
 ```
 
+#### Optional Dependencies
+
+Optional dependencies enhance functionality but are not required:
+
+```lua
+optional_depends = {
+    "org.openssl.libssl>=1.1.0",
+    { name = "net.zlib", constraint = ">=1.2.0" },
+}
+```
+
 ## Architecture
 
 ### Modules
@@ -328,6 +343,7 @@ Each module serves a single purpose:
 - `installer.lua` - Installation and uninstallation
 - `search.lua` - Package searching
 - `sync.lua` - Repository synchronization
+- `version.lua` - Version comparison and sorting
 
 ### File Locations
 
