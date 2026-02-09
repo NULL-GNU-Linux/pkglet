@@ -57,6 +57,13 @@ function cli.parse(args)
             parsed.noask = true
         elseif arg == "--nodeps" then
             parsed.nodeps = true
+        elseif arg == "--to" then
+            i = i + 1
+            parsed.target_version = args[i]
+        elseif arg == "--pin" then
+            parsed.pin = true
+        elseif arg == "--unpin" then
+            parsed.unpin = true
         elseif arg:match("^%-%-") then
             local opt = arg:sub(3)
             local key, value = opt:match("^([^=]+)=(.+)$")
@@ -100,6 +107,11 @@ function cli.print_help()
 "COMMANDS:\n" ..
 "   \27[1;37mi/install <package>\27[0m        Install a package\n" ..
 "   \27[1;37mu/uninstall <package>\27[0m      Uninstall a package\n" ..
+"   \27[1;37mU/upgrade <package>\27[0m        Upgrade a package\n" ..
+"   \27[1;37md/downgrade <package>\27[0m      Downgrade a package\n" ..
+"   \27[1;37mL/list-versions <package>\27[0m List package versions\n" ..
+"   \27[1;37mpin <package> [version]\27[0m    Pin package to version\n" ..
+"   \27[1;37munpin <package>\27[0m            Unpin package\n" ..
 "   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
 "   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
 "   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
@@ -107,16 +119,24 @@ function cli.print_help()
 "OPTIONS:\n" ..
 "   \27[1;37m--source\27[0m                   Build from source\n" ..
 "   \27[1;37m--binary\27[0m                   Install binary package\n" ..
-"   \27[1;37m--bootstrap-to=<path>\27[0m      Bootstrap to alternate root\n" ..
+"   \27[1;37m--bootstrap-to <path>\27[0m      Bootstrap to alternate root\n" ..
 "   \27[1;37m--noask\27[0m                    Skip installation confirmation\n" ..
 "   \27[1;37m--nodeps\27[0m                    Skip dependency installation\n" ..
-"   \27[1;37m--<option>=<value>\27[0m         Set package option\n" ..
+"   \27[1;37m--to <version>\27[0m             Target version for downgrade\n" ..
+"   \27[1;37m--pin\27[0m                      Pin package after install/upgrade\n" ..
+"   \27[1;37m--unpin\27[0m                    Unpin package before install/upgrade\n" ..
+"   \27[1;37m--<option> <value>\27[0m         Set package option\n" ..
 "   \27[1;37m--<flag>\27[0m                   Enable boolean package option\n" ..
 "\n" ..
 "EXAMPLES:\n" ..
 "   pkglet i org.kernel.linux\n" ..
 "   pkglet install org.kernel.linux --source --menuconfig\n" ..
 "   pkglet install gcc --bootstrap-to=/mnt/bootstrap\n" ..
+"   pkglet U org.kernel.linux\n" ..
+"   pkglet downgrade org.kernel.linux --to 6.15.0\n" ..
+"   pkglet L org.kernel.linux\n" ..
+"   pkglet pin org.kernel.linux 6.17.5\n" ..
+"   pkglet unpin org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux --noask\n" ..
 "   pkglet S\n" ..

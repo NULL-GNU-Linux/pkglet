@@ -10,12 +10,72 @@ local function main()
     config.init()
     local args = cli.parse(arg)
     if args.command == "i" or args.command == "install" then
+        if args.unpin then
+            config.unpin_package(args.package)
+        end
         local manifest = loader.load_manifest(args.package)
+
+        local pinned_version = config.is_pinned(args.package)
+        if pinned_version then
+            manifest.version = pinned_version
+        elseif args.target_version then
+            manifest.version = args.target_version
+        end
+
         installer.install(manifest, args)
+
+        if args.pin then
+            config.pin_package(args.package, manifest.version)
+        end
 
     elseif args.command == "u" or args.command == "uninstall" then
         local manifest = loader.load_manifest(args.package)
         installer.uninstall(manifest)
+        config.unpin_package(args.package)
+
+    elseif args.command == "U" or args.command == "upgrade" then
+        installer.upgrade(args.package, args)
+
+        if args.pin then
+            local latest_version = installer.get_installed_version(args.package)
+            config.pin_package(args.package, latest_version)
+        end
+
+    elseif args.command == "d" or args.command == "downgrade" then
+        local target_version = args.target_version
+        if not target_version then
+            io.stderr:write("error: --to <version> required for downgrade\n")
+            os.exit(1)
+        end
+        installer.downgrade(args.package, target_version, args)
+
+        if args.pin then
+            config.pin_package(args.package, target_version)
+        end
+
+    elseif args.command == "L" or args.command == "list-versions" then
+        installer.list_versions(args.package)
+
+    elseif args.command == "pin" then
+        local package_name = args.package
+        local target_version = args.target_version
+
+        if target_version then
+            config.pin_package(package_name, target_version)
+            print("Pinned " .. package_name .. " to version " .. target_version)
+        else
+            local current_version = installer.get_installed_version(package_name)
+            if current_version then
+                config.pin_package(package_name, current_version)
+                print("Pinned " .. package_name .. " to current version " .. current_version)
+            else
+                print("Package not installed: " .. package_name)
+            end
+        end
+
+    elseif args.command == "unpin" then
+        config.unpin_package(args.package)
+        print("Unpinned " .. args.package)
 
     elseif args.command == "s" or args.command == "search" then
         local search = require("src.search")

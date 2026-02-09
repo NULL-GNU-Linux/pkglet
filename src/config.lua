@@ -26,9 +26,11 @@ config.REPOS_CONF = config.CONFIG_DIR .. "/repos.conf"
 config.MAKE_CONF = config.CONFIG_DIR .. "/make.lua"
 config.PACKAGE_OPTS = config.CONFIG_DIR .. "/package.opts"
 config.PACKAGE_MASK = config.CONFIG_DIR .. "/package.mask"
+config.PACKAGE_LOCK = config.CONFIG_DIR .. "/package.lock"
 config.global_options = {}
 config.package_options = {}
 config.masked_packages = {}
+config.pinned_packages = {}
 config.repos = {}
 
 --- Initialize the entire configuration system and create necessary directories
@@ -51,6 +53,7 @@ function config.init()
     config.load_repos()
     config.load_package_options()
     config.load_masks()
+    config.load_pins()
 end
 
 --- Load repository configuration from the repos.conf file
@@ -205,4 +208,77 @@ function config.set_bootstrap_root(path)
     config.ROOT = path .. "/"
     config.DB_PATH = path .. "/var/lib/pkglet"
 end
+
+--- Load package pin list from the package.lock configuration file
+--
+-- This function reads the package pin file to identify packages that should
+-- be locked to specific versions. Package pinning prevents automatic upgrades
+-- of critical packages, ensuring system stability by maintaining known working
+-- versions. The pin list provides administrators with fine-grained control over
+-- package version management.
+--
+-- Each line in the pin file specifies a package name and exact version that
+-- should be enforced. The function supports comment lines starting with # for
+-- documentation and ignores empty lines, making the pin file maintainable and
+-- self-documenting.
+function config.load_pins()
+    local f = io.open(config.PACKAGE_LOCK, "r")
+    if not f then return end
+    for line in f:lines() do
+        line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
+        if line ~= "" then
+            local pkg, version = line:match("^([^%s]+)%s+(.+)$")
+            if pkg and version then
+                config.pinned_packages[pkg] = version
+            end
+        end
+    end
+    f:close()
+end
+
+--- Check if a package is pinned to a specific version
+-- @param package_name string Name of the package to check
+-- @return string|nil Pinned version, or nil if not pinned
+function config.is_pinned(package_name)
+    return config.pinned_packages[package_name]
+end
+
+--- Pin a package to a specific version
+-- @param package_name string Name of the package to pin
+-- @param version string Version to pin the package to
+function config.pin_package(package_name, version)
+    config.pinned_packages[package_name] = version
+    
+    local f = io.open(config.PACKAGE_LOCK, "a")
+    if f then
+        f:write(package_name .. " " .. version .. "\n")
+        f:close()
+    end
+end
+
+--- Unpin a package, allowing automatic upgrades
+-- @param package_name string Name of the package to unpin
+function config.unpin_package(package_name)
+    config.pinned_packages[package_name] = nil
+    
+    local lines = {}
+    local f = io.open(config.PACKAGE_LOCK, "r")
+    if f then
+        for line in f:lines() do
+            if not line:match("^" .. package_name .. "%s+") then
+                table.insert(lines, line)
+            end
+        end
+        f:close()
+    end
+    
+    f = io.open(config.PACKAGE_LOCK, "w")
+    if f then
+        for _, line in ipairs(lines) do
+            f:write(line .. "\n")
+        end
+        f:close()
+    end
+end
+
 return config

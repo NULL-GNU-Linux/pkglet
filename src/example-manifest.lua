@@ -21,7 +21,15 @@ pkg = {
 	maintainer = "NEOAPPS <neo@obsidianos.xyz>",
 	license = "GPL-2.0",
 	homepage = "https://kernel.org",
-	depends = {},
+	depends = { 
+		"org.gnu.gcc>=9.0.0",
+		{ name = "org.gnu.make", constraint = ">=4.0.0" },
+		"org.libc.glibc"
+	},
+	build_depends = {
+		"org.libc.linux-headers>=5.0.0",
+		{ name = "org.util.bc", constraint = ">=1.0.0" }
+	},
 	conflicts = {},
 	provides = { "linux" },
 	sources = {

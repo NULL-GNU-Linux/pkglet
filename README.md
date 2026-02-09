@@ -75,6 +75,15 @@ org.kernel.linux
 bad.package.foo
 ```
 
+### Package Pinning/Locking
+
+Edit `/etc/pkglet/package.lock`:
+
+```
+org.kernel.linux 6.17.5
+org.gnu.gcc 11.2.0
+```
+
 ## Usage
 
 ### Install Package
@@ -83,6 +92,36 @@ bad.package.foo
 pkglet i org.kernel.linux
 pkglet i org.kernel.linux --source
 pkglet i org.kernel.linux --menuconfig
+pkglet i org.kernel.linux --to 6.17.5
+```
+
+### Upgrade Package
+
+```bash
+pkglet U org.kernel.linux
+pkglet upgrade org.kernel.linux --pin
+```
+
+### Downgrade Package
+
+```bash
+pkglet d org.kernel.linux --to 6.15.0
+pkglet downgrade org.kernel.linux --to 6.15.0 --pin
+```
+
+### List Package Versions
+
+```bash
+pkglet L org.kernel.linux
+pkglet list-versions org.kernel.linux
+```
+
+### Pin/Unpin Packages
+
+```bash
+pkglet pin org.kernel.linux 6.17.5
+pkglet pin org.kernel.linux
+pkglet unpin org.kernel.linux
 ```
 
 ### Uninstall Package
@@ -133,7 +172,13 @@ pkg = {
     maintainer = "You <you@example.com>",
     license = "MIT",
     homepage = "https://example.com",
-    depends = { "org.deps.foo", "org.deps.bar" },
+    depends = { 
+        "org.deps.foo>=1.0.0",
+        { name = "org.deps.bar", constraint = "^2.0.0" }
+    },
+    build_depends = {
+        "org.build.meson>=0.50.0"
+    },
     conflicts = {},
     provides = { "example" },
     sources = {
@@ -236,6 +281,35 @@ Available in hook functions:
 - `tar`: Downloads and extracts tar archives (gz, bz2, xz, zip)
 - `git`: Clones git repositories
 - `file`: Downloads single files
+
+### Dependencies
+
+#### Version Constraints
+
+Dependencies support semantic versioning constraints:
+
+```lua
+depends = {
+    "org.package.name>=1.0.0",        -- Minimum version
+    "org.package.name<=2.0.0",        -- Maximum version
+    "org.package.name==1.5.0",        -- Exact version
+    "org.package.name!=1.0.0",        -- Exclude version
+    "org.package.name^1.0.0",         -- Caret range (>=1.0.0 <2.0.0)
+    "org.package.name~1.5.0",         -- Tilde range (>=1.5.0 <1.6.0)
+    { name = "org.package.name", constraint = ">=2.0.0" }
+}
+```
+
+#### Build Dependencies
+
+Build-time dependencies are only required during compilation:
+
+```lua
+build_depends = {
+    "org.build.meson>=0.50.0",
+    "org.build.ninja"
+}
+```
 
 ## Architecture
 

@@ -231,6 +231,7 @@ function installer.record_installation(manifest)
         f:write("name=" .. manifest.name .. "\n")
         f:write("version=" .. manifest.version .. "\n")
         f:write("installed=" .. os.time() .. "\n")
+        f:write("manifest_path=" .. manifest._path .. "\n")
         f:close()
     end
 end
@@ -266,16 +267,33 @@ function installer.copy_from_temp(manifest)
 end
 
 function installer.get_dependencies(manifest)
+    local version_module = require("src.version")
     local deps = {}
     if manifest.depends then
         for _, dep in ipairs(manifest.depends) do
-            deps[dep] = "latest"
+            if type(dep) == "string" then
+                local parsed = version_module.parse_dependency(dep)
+                deps[parsed.name] = parsed.constraint
+            elseif type(dep) == "table" then
+                deps[dep.name] = dep.constraint or "*"
+            end
+        end
+    end
+    if manifest.build_depends then
+        for _, dep in ipairs(manifest.build_depends) do
+            if type(dep) == "string" then
+                local parsed = version_module.parse_dependency(dep)
+                deps[parsed.name] = parsed.constraint
+            elseif type(dep) == "table" then
+                deps[dep.name] = (dep.constraint or "*") .. ":build"
+            end
         end
     end
     return deps
 end
 
 function installer.resolve_dependencies(manifest, visited)
+    local version_module = require("src.version")
     visited = visited or {}
     local packages_to_install = {}
     
@@ -289,15 +307,33 @@ function installer.resolve_dependencies(manifest, visited)
     end
     
     local deps = installer.get_dependencies(manifest)
-    for dep_name, dep_version in pairs(deps) do
+    for dep_name, dep_constraint in pairs(deps) do
+        local is_build_dep = dep_constraint:match(":build$") ~= nil
+        if is_build_dep then
+            dep_constraint = dep_constraint:gsub(":build$", "")
+        end
+        
         if not resolver.is_installed(dep_name) and not visited[dep_name] then
+            local available_versions = version_module.get_available_versions(dep_name)
+            local selected_version = version_module.highest_satisfying(available_versions, dep_constraint)
+            
+            if not selected_version then
+                error("no satisfying version found for " .. dep_name .. " " .. dep_constraint)
+            end
+            
             local dep_manifest = loader.load_manifest(dep_name)
+            dep_manifest.version = selected_version
             local dep_packages = installer.resolve_dependencies(dep_manifest, visited)
             for name, version in pairs(dep_packages) do
                 packages_to_install[name] = version
             end
             if not visited[dep_name] then
-                packages_to_install[dep_name] = dep_version
+                packages_to_install[dep_name] = selected_version
+            end
+        elseif resolver.is_installed(dep_name) then
+            local current_version = installer.get_installed_version(dep_name)
+            if not version_module.satisfies(dep_constraint, current_version) then
+                error("installed version of " .. dep_name .. " (" .. current_version .. ") does not satisfy constraint " .. dep_constraint)
             end
         end
     end
@@ -389,6 +425,112 @@ function installer.run_single_hook(manifest, args)
     end
 
     print("Hook '" .. tostring(hook_name) .. "' completed successfully")
+end
+
+--- Get installed version of a package
+-- @param package_name string Name of the package
+-- @return string|nil Installed version, or nil if not installed
+function installer.get_installed_version(package_name)
+    local db_file = config.DB_PATH .. "/" .. package_name:gsub("%.", "-")
+    local f = io.open(db_file, "r")
+    if not f then return nil end
+    
+    local version = nil
+    for line in f:lines() do
+        local key, value = line:match("^([^=]+)=(.+)$")
+        if key == "version" then
+            version = value
+            break
+        end
+    end
+    f:close()
+    return version
+end
+
+--- Upgrade a package to the latest available version
+-- @param package_name string Name of the package to upgrade
+-- @param args table Installation arguments
+function installer.upgrade(package_name, args)
+    local version_module = require("src.version")
+    local loader = require("src.loader")
+    local resolver = require("src.resolver")
+    
+    if not resolver.is_installed(package_name) then
+        print("Package not installed: " .. package_name)
+        return
+    end
+    
+    local current_version = installer.get_installed_version(package_name)
+    local latest_version = version_module.get_latest_version(package_name, current_version)
+    
+    if not latest_version then
+        print("Package " .. package_name .. " is already up to date at version " .. current_version)
+        return
+    end
+    
+    print("Upgrading " .. package_name .. " from " .. current_version .. " to " .. latest_version)
+    
+    local manifest = loader.load_manifest(package_name)
+    manifest.version = latest_version
+    
+    installer.uninstall(manifest)
+    installer.install(manifest, args)
+end
+
+--- Downgrade a package to a specific version
+-- @param package_name string Name of the package to downgrade
+-- @param target_version string Target version to downgrade to
+-- @param args table Installation arguments
+function installer.downgrade(package_name, target_version, args)
+    local version_module = require("src.version")
+    local loader = require("src.loader")
+    local resolver = require("src.resolver")
+    
+    if not resolver.is_installed(package_name) then
+        print("Package not installed: " .. package_name)
+        return
+    end
+    
+    local current_version = installer.get_installed_version(package_name)
+    local available_versions = version_module.get_available_versions(package_name)
+    
+    local version_found = false
+    for _, v in ipairs(available_versions) do
+        if v == target_version then
+            version_found = true
+            break
+        end
+    end
+    
+    if not version_found then
+        print("Version " .. target_version .. " not available for package " .. package_name)
+        return
+    end
+    
+    print("Downgrading " .. package_name .. " from " .. current_version .. " to " .. target_version)
+    
+    local manifest = loader.load_manifest(package_name)
+    manifest.version = target_version
+    
+    installer.uninstall(manifest)
+    installer.install(manifest, args)
+end
+
+--- List all available versions of a package
+-- @param package_name string Name of the package
+function installer.list_versions(package_name)
+    local version_module = require("src.version")
+    local resolver = require("src.resolver")
+    
+    local available_versions = version_module.get_available_versions(package_name)
+    local current_version = installer.get_installed_version(package_name)
+    
+    print("Available versions for " .. package_name .. ":")
+    for i = #available_versions, 1, -1 do
+        local version = available_versions[i]
+        local marker = version == current_version and " [installed]" or ""
+        print("  " .. version .. marker)
+    end
 end
 
 return installer
