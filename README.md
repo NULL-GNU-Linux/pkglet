@@ -106,6 +106,8 @@ pkglet upgrade org.kernel.linux --pin
 
 ```bash
 pkglet d org.kernel.linux --to 6.15.0
+pkglet downgrade org.kernel.linux --to v6.15.0
+pkglet d org.kernel.linux --to a1b2c3d4
 pkglet downgrade org.kernel.linux --to 6.15.0 --pin
 ```
 

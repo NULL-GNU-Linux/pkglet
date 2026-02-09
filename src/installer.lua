@@ -477,9 +477,9 @@ function installer.upgrade(package_name, args)
     installer.install(manifest, args)
 end
 
---- Downgrade a package to a specific version
+--- Downgrade a package to a specific version (any string allowed)
 -- @param package_name string Name of the package to downgrade
--- @param target_version string Target version to downgrade to
+-- @param target_version string Target version to downgrade to (can be any string: tag, commit, etc.)
 -- @param args table Installation arguments
 function installer.downgrade(package_name, target_version, args)
     local version_module = require("src.version")
@@ -492,20 +492,6 @@ function installer.downgrade(package_name, target_version, args)
     end
     
     local current_version = installer.get_installed_version(package_name)
-    local available_versions = version_module.get_available_versions(package_name)
-    
-    local version_found = false
-    for _, v in ipairs(available_versions) do
-        if v == target_version then
-            version_found = true
-            break
-        end
-    end
-    
-    if not version_found then
-        print("Version " .. target_version .. " not available for package " .. package_name)
-        return
-    end
     
     print("Downgrading " .. package_name .. " from " .. current_version .. " to " .. target_version)
     
@@ -526,11 +512,16 @@ function installer.list_versions(package_name)
     local current_version = installer.get_installed_version(package_name)
     
     print("Available versions for " .. package_name .. ":")
-    for i = #available_versions, 1, -1 do
-        local version = available_versions[i]
-        local marker = version == current_version and " [installed]" or ""
-        print("  " .. version .. marker)
+    if #available_versions == 0 then
+        print("  No predefined versions found. You can specify any version string (tag, commit hash, etc.)")
+    else
+        for i = #available_versions, 1, -1 do
+            local version = available_versions[i]
+            local marker = version == current_version and " [installed]" or ""
+            print("  " .. version .. marker)
+        end
     end
+    print("  Note: You can downgrade to any version string (git commit, tag, etc.)")
 end
 
 return installer

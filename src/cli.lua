@@ -134,6 +134,8 @@ function cli.print_help()
 "   pkglet install gcc --bootstrap-to=/mnt/bootstrap\n" ..
 "   pkglet U org.kernel.linux\n" ..
 "   pkglet downgrade org.kernel.linux --to 6.15.0\n" ..
+"   pkglet d org.kernel.linux --to v6.15.0\n" ..
+"   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
 "   pkglet L org.kernel.linux\n" ..
 "   pkglet pin org.kernel.linux 6.17.5\n" ..
 "   pkglet unpin org.kernel.linux\n" ..
