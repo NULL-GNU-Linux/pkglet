@@ -6,6 +6,7 @@ local config = require("src.config")
 local fetcher = require("src.fetcher")
 local builder = require("src.builder")
 local resolver = require("src.resolver")
+local loader = require("src.loader")
 
 --- Install a package from manifest with comprehensive dependency resolution and build orchestration
 -- This function is the core installation routine that handles the complete package lifecycle
@@ -40,16 +41,9 @@ function installer.install(manifest, args)
         return
     end
 
-    local packages_to_install = {}
-    packages_to_install[manifest.name] = manifest.version
-    local deps = installer.get_dependencies(manifest)
-    for dep_name, dep_version in pairs(deps) do
-        if not resolver.is_installed(dep_name) then
-            packages_to_install[dep_name] = dep_version
-        end
-    end
+    local packages_to_install = installer.resolve_dependencies(manifest, {})
 
-    print("Package to install:")
+    print("Packages to install:")
     for name, version in pairs(packages_to_install) do
         print("  " .. name .. " " .. version)
     end
@@ -64,29 +58,37 @@ function installer.install(manifest, args)
         end
     end
 
-    print("Installing " .. manifest.name .. " " .. manifest.version)
-    local build_type = installer.determine_build_type(manifest, args.build_from)
-    print("Build type: " .. build_type)
-    local options = installer.merge_options(manifest, args.options)
-    local build_dir = config.BUILD_PATH .. "/" .. manifest.name
-    local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
-    os.execute("rm -rf " .. build_dir)
-    os.execute("mkdir -p " .. build_dir)
-    os.execute("rm -rf " .. temp_install_dir)
-    os.execute("mkdir -p " .. temp_install_dir)
-    local source_spec
-    if build_type == "source" then
-        source_spec = manifest.sources.source
-    else
-        source_spec = manifest.sources.binary
+    local install_order = {}
+    for name, version in pairs(packages_to_install) do
+        table.insert(install_order, name)
     end
-    if source_spec then
-        fetcher.fetch(source_spec, build_dir)
+    
+    for _, name in ipairs(install_order) do
+        local pkg_manifest = loader.load_manifest(name)
+        print("Installing " .. pkg_manifest.name .. " " .. pkg_manifest.version)
+        local build_type = installer.determine_build_type(pkg_manifest, args.build_from)
+        print("Build type: " .. build_type)
+        local options = installer.merge_options(pkg_manifest, args.options)
+        local build_dir = config.BUILD_PATH .. "/" .. pkg_manifest.name
+        local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. pkg_manifest.name
+        os.execute("rm -rf " .. build_dir)
+        os.execute("mkdir -p " .. build_dir)
+        os.execute("rm -rf " .. temp_install_dir)
+        os.execute("mkdir -p " .. temp_install_dir)
+        local source_spec
+        if build_type == "source" then
+            source_spec = pkg_manifest.sources.source
+        else
+            source_spec = pkg_manifest.sources.binary
+        end
+        if source_spec then
+            fetcher.fetch(source_spec, build_dir)
+        end
+        builder.build(pkg_manifest, build_dir, build_type, options)
+        installer.copy_from_temp(pkg_manifest)
+        installer.record_installation(pkg_manifest)
+        print("Successfully installed " .. pkg_manifest.name)
     end
-    builder.build(manifest, build_dir, build_type, options)
-    installer.copy_from_temp(manifest)
-    installer.record_installation(manifest)
-    print("Successfully installed " .. manifest.name)
 end
 
 --- Uninstall a package with custom hook support and thorough cleanup
@@ -246,12 +248,42 @@ end
 
 function installer.get_dependencies(manifest)
     local deps = {}
-    if manifest.dependencies then
-        for _, dep in ipairs(manifest.dependencies) do
-            deps[dep.name] = dep.version or "latest"
+    if manifest.depends then
+        for _, dep in ipairs(manifest.depends) do
+            deps[dep] = "latest"
         end
     end
     return deps
+end
+
+function installer.resolve_dependencies(manifest, visited)
+    visited = visited or {}
+    local packages_to_install = {}
+    
+    if visited[manifest.name] then
+        return {}
+    end
+    visited[manifest.name] = true
+    
+    if not resolver.is_installed(manifest.name) then
+        packages_to_install[manifest.name] = manifest.version
+    end
+    
+    local deps = installer.get_dependencies(manifest)
+    for dep_name, dep_version in pairs(deps) do
+        if not resolver.is_installed(dep_name) and not visited[dep_name] then
+            local dep_manifest = loader.load_manifest(dep_name)
+            local dep_packages = installer.resolve_dependencies(dep_manifest, visited)
+            for name, version in pairs(dep_packages) do
+                packages_to_install[name] = version
+            end
+            if not visited[dep_name] then
+                packages_to_install[dep_name] = dep_version
+            end
+        end
+    end
+    
+    return packages_to_install
 end
 
 function installer.count_keys(table)

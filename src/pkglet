@@ -11,11 +11,6 @@ local function main()
     local args = cli.parse(arg)
     if args.command == "i" or args.command == "install" then
         local manifest = loader.load_manifest(args.package)
-        local deps = resolver.resolve_dependencies(manifest)
-        for _, dep in ipairs(deps) do
-            local dep_manifest = loader.load_manifest(dep)
-            installer.install(dep_manifest, args)
-        end
         installer.install(manifest, args)
 
     elseif args.command == "u" or args.command == "uninstall" then
