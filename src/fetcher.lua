@@ -40,8 +40,21 @@ function fetcher.fetch_tar(spec, build_dir)
 	local distfile = config.DISTFILES_PATH .. "/" .. filename
 	if not fetcher.file_exists(distfile) then
 		print("Fetching " .. filename .. "...")
-		local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
-		if not ok or code ~= 0 then
+		
+		local success = false
+		if spec.url:match("^https?://") then
+			local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
+			if ok and code == 0 then
+				success = true
+			end
+		else
+			local ok, _, code = os.execute("cp " .. spec.url .. " " .. distfile)
+			if ok and code == 0 then
+				success = true
+			end
+		end
+		
+		if not success then
 			error("failed to download: " .. spec.url)
 		end
 	end
@@ -106,8 +119,21 @@ function fetcher.fetch_file(spec, build_dir)
 	local distfile = config.DISTFILES_PATH .. "/" .. filename
 	if not fetcher.file_exists(distfile) then
 		print("Fetching " .. filename .. "...")
-		local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
-		if not ok or code ~= 0 then
+		
+		local success = false
+		if spec.url:match("^https?://") then
+			local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
+			if ok and code == 0 then
+				success = true
+			end
+		else
+			local ok, _, code = os.execute("cp " .. spec.url .. " " .. distfile)
+			if ok and code == 0 then
+				success = true
+			end
+		end
+		
+		if not success then
 			error("failed to download: " .. spec.url)
 		end
 	end

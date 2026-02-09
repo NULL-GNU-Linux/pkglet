@@ -56,6 +56,38 @@ function resolver.is_installed(package_name)
     return false
 end
 
+--- Check if any package provides a virtual package
+-- @param virtual_name string Name of virtual package
+-- @return boolean True if any installed package provides the virtual package
+function resolver.is_provided(virtual_name)
+    local conflict = require("src.conflict")
+    local providers = conflict.get_providers(virtual_name)
+    
+    for _, provider in ipairs(providers) do
+        if resolver.is_installed(provider) then
+            return true
+        end
+    end
+    
+    return false
+end
+
+--- Get installed package that provides a virtual package
+-- @param virtual_name string Name of virtual package
+-- @return string|nil Name of installed package that provides the virtual package
+function resolver.get_provider(virtual_name)
+    local conflict = require("src.conflict")
+    local providers = conflict.get_providers(virtual_name)
+    
+    for _, provider in ipairs(providers) do
+        if resolver.is_installed(provider) then
+            return provider
+        end
+    end
+    
+    return nil
+end
+
 --- Validate that no conflicting packages are currently installed
 -- This function performs conflict resolution by checking the current installation
 -- database against the package's declared conflicts list. It prevents installation

@@ -34,8 +34,9 @@ pkg = {
 		"org.openssl.libssl>=1.1.0",
 		{ name = "net.zlib", constraint = ">=1.2.0" },
 	},
-	conflicts = {},
-	provides = { "linux" },
+	conflicts = { "org.kernel.linux-rt" },
+	replaces = { "org.kernel.legacy-linux" },
+	provides = { "linux", "kernel" },
 	sources = {
 		binary = {
 			type = "tar",

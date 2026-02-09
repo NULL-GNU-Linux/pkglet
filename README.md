@@ -43,8 +43,14 @@ Default installation:
 Edit `/etc/pkglet/repos.conf`:
 
 ```
-main /var/db/pkglet/repos/main
-overlay /var/db/pkglet/repos/overlay
+[repositories]
+main /var/db/pkglet/repos/main 100
+overlay /var/db/pkglet/repos/overlay 50
+testing /var/db/pkglet/repos/testing 10
+
+[mirrors]
+main https://mirror1.example.com/repos/main https://mirror2.example.com/repos/main
+overlay https://mirror1.example.com/repos/overlay
 ```
 
 ### Build Options
@@ -136,6 +142,30 @@ pkglet unpin org.kernel.linux
 pkglet u org.kernel.linux
 ```
 
+### Reverse Dependencies
+
+```bash
+pkglet R org.kernel.linux
+pkglet reverse-deps org.kernel.linux
+```
+
+### Force Installation
+
+```bash
+pkglet i org.kernel.linux --force
+pkglet install org.kernel.linux --force
+```
+
+### GPG Operations
+
+```bash
+pkglet gpg generate-key "Repo Maintainer" "maintainer@example.com"
+pkglet gpg import-key /path/to/key.pub
+pkglet gpg list-keys
+pkglet gpg sign-package package.tar.gz
+pkglet gpg verify-package package.tar.gz
+```
+
 ### Search Packages
 
 ```bash
@@ -185,6 +215,13 @@ pkg = {
     build_depends = {
         "org.build.meson>=0.50.0"
     },
+    optional_depends = {
+        "org.crypto.openssl>=1.1.0",
+        "org.compression.zlib>=1.2.0"
+    },
+    conflicts = { "org.package.conflicting" },
+    replaces = { "org.package.legacy" },
+    provides = { "virtual-service" },
     conflicts = {},
     provides = { "example" },
     sources = {

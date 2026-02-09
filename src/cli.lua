@@ -57,6 +57,8 @@ function cli.parse(args)
             parsed.noask = true
         elseif arg == "--nodeps" then
             parsed.nodeps = true
+        elseif arg == "--force" then
+            parsed.force = true
         elseif arg == "--to" then
             i = i + 1
             parsed.target_version = args[i]
@@ -114,7 +116,9 @@ function cli.print_help()
 "   \27[1;37munpin <package>\27[0m            Unpin package\n" ..
 "   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
 "   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
+"   \27[1;37mM/generate-manifest <repo>\27[0m Generate repository manifest\n" ..
 "   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
+"   \27[1;37mR/reverse-deps <package>\27[0m Show reverse dependencies\n" ..
 "\n" ..
 "OPTIONS:\n" ..
 "   \27[1;37m--source\27[0m                   Build from source\n" ..
@@ -123,6 +127,7 @@ function cli.print_help()
 "   \27[1;37m--noask\27[0m                    Skip installation confirmation\n" ..
 "   \27[1;37m--nodeps\27[0m                    Skip dependency installation\n" ..
 "   \27[1;37m--with-optional\27[0m           Install optional dependencies\n" ..
+"   \27[1;37m--force\27[0m                    Force installation (remove conflicts)\n" ..
 "   \27[1;37m--to <version>\27[0m             Target version for downgrade\n" ..
 "   \27[1;37m--pin\27[0m                      Pin package after install/upgrade\n" ..
 "   \27[1;37m--unpin\27[0m                    Unpin package before install/upgrade\n" ..
@@ -139,6 +144,8 @@ function cli.print_help()
 "   pkglet d org.kernel.linux --to v6.15.0\n" ..
 "   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
 "   pkglet L org.kernel.linux\n" ..
+"   pkglet R org.kernel.linux\n" ..
+"   pkglet reverse-deps org.kernel.linux\n" ..
 "   pkglet pin org.kernel.linux 6.17.5\n" ..
 "   pkglet unpin org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux\n" ..

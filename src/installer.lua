@@ -30,7 +30,16 @@ function installer.install(manifest, args)
         config.set_bootstrap_root(args.bootstrap_to)
         print("Bootstrap mode: installing to " .. config.ROOT)
     end
-    resolver.check_conflicts(manifest)
+    
+    local conflict = require("src.conflict")
+    local conflicts = conflict.check_conflicts(manifest.name, manifest)
+    
+    if #conflicts > 0 then
+        local can_resolve = conflict.resolve_conflicts(manifest.name, conflicts, args.force)
+        if not can_resolve then
+            error("installation aborted due to unresolvable conflicts")
+        end
+    end
 
     if args.options.hook then
         return installer.run_single_hook(manifest, args)
@@ -327,7 +336,10 @@ function installer.resolve_dependencies(manifest, visited)
     end
     
     local deps = installer.get_dependencies(manifest)
-    for dep_name, dep_constraint in pairs(deps) do
+    local conflict = require("src.conflict")
+    local resolved_deps = conflict.resolve_virtual_dependencies(deps)
+    
+    for dep_name, dep_constraint in pairs(resolved_deps) do
         local is_build_dep = dep_constraint:match(":build$") ~= nil
         local is_optional_dep = dep_constraint:match(":optional$") ~= nil
         

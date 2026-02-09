@@ -85,9 +85,32 @@ local function main()
         local sync = require("src.sync")
         sync.update_repos()
 
+    elseif args.command == "M" or args.command == "generate-manifest" then
+        local sync = require("src.sync")
+        local repo_path = args.package or config.repos[config.get_repos_by_priority()[1]]
+        if repo_path then
+            sync.generate_repo_manifest(repo_path)
+        else
+            print("Error: Repository path required or no repositories configured")
+        end
+
     elseif args.command == "I" or args.command == "info" then
         local manifest = loader.load_manifest(args.package)
         loader.print_info(manifest)
+
+    elseif args.command == "R" or args.command == "reverse-deps" then
+        local conflict = require("src.conflict")
+        local reverse_deps = conflict.get_reverse_dependencies(args.package)
+        
+        if #reverse_deps == 0 then
+            print("No packages depend on " .. args.package)
+        else
+            print("Packages that depend on " .. args.package .. ":")
+            for _, dep_pkg in ipairs(reverse_deps) do
+                local version = installer.get_installed_version(dep_pkg)
+                print("  " .. dep_pkg .. " (" .. (version or "unknown") .. ")")
+            end
+        end
 
     elseif args.command == "c" or args.command == "clean" then
         os.execute("rm -rf " .. config.CACHE_PATH)

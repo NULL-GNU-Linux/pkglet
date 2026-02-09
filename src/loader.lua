@@ -8,7 +8,7 @@ local config = require("src.config")
 -- This function searches through all registered repositories to find the manifest file
 -- for a specified package. It converts package names using dot notation to filesystem
 -- paths, allowing for hierarchical package organization. The search proceeds through
--- repositories in the order they're configured, returning the first match found.
+-- repositories in priority order, trying mirrors if primary sources fail.
 -- This mechanism enables package discovery across multiple sources while supporting
 -- both flat and nested directory structures for optimal package organization.
 -- @param package_name string The full package name using dot notation (e.g., "org.example.package")
@@ -23,19 +23,67 @@ function loader.find_manifest(package_name)
             if f then
                 f:close()
                 return manifest_path
+            else
+                manifest_path = loader.fetch_from_mirrors(repo, pkg_name)
+                if manifest_path then
+                    return manifest_path
+                end
             end
         end
         error("package not found: " .. package_name)
     end
-    for repo_name, repo_path in pairs(config.repos) do
+    
+    local repos_by_priority = config.get_repos_by_priority()
+    for _, repo_name in ipairs(repos_by_priority) do
+        local repo_path = config.repos[repo_name]
         local manifest_path = repo_path .. "/" .. package_name:gsub("%.", "/") .. "/manifest.lua"
         local f = io.open(manifest_path, "r")
         if f then
             f:close()
             return manifest_path
+        else
+            manifest_path = loader.fetch_from_mirrors(repo_name, package_name)
+            if manifest_path then
+                return manifest_path
+            end
         end
     end
     error("package not found: " .. package_name)
+end
+
+--- Fetch package manifest from repository mirrors
+-- This function attempts to download a package manifest from the configured
+-- mirrors for a repository. It tries each mirror in order until one succeeds.
+-- @param repo_name string Name of the repository
+-- @param package_name string Package name to fetch
+-- @return string|nil Path to downloaded manifest or nil if failed
+function loader.fetch_from_mirrors(repo_name, package_name)
+    local mirrors = config.get_repo_mirrors(repo_name)
+    if #mirrors == 0 then
+        return nil
+    end
+    
+    local relative_path = package_name:gsub("%.", "/") .. "/manifest.lua"
+    local temp_file = "/tmp/pkglet-manifest-" .. package_name:gsub("%.", "-") .. ".lua"
+    
+    for _, mirror in ipairs(mirrors) do
+        if mirror:match("^https?://") then
+            local url = mirror .. "/" .. relative_path
+            local cmd = "wget -q -O " .. temp_file .. " " .. url .. " 2>/dev/null"
+            local ok, _, code = os.execute(cmd)
+            
+            if ok and code == 0 then
+                local f = io.open(temp_file, "r")
+                if f then
+                    f:close()
+                    return temp_file
+                end
+            end
+        end
+    end
+    
+    os.remove(temp_file)
+    return nil
 end
 --- Load, parse, and validate package manifest with sandboxed execution environment
 -- This function provides secure manifest loading by executing manifest files in a

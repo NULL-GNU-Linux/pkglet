@@ -1,0 +1,13 @@
+# Repository Configuration
+# Format: [section]
+
+[repositories]
+# name path priority (higher priority = preferred)
+main /var/db/pkglet/repos/main 100
+overlay /var/db/pkglet/repos/overlay 50
+testing /var/db/pkglet/repos/testing 10
+
+[mirrors]
+# repo mirror1 mirror2 mirror3
+main https://mirror1.example.com/repos/main https://mirror2.example.com/repos/main
+overlay https://mirror1.example.com/repos/overlay
