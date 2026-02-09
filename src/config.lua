@@ -133,7 +133,15 @@ function config.load_masks()
     for line in f:lines() do
         line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
         if line ~= "" then
-            config.masked_packages[line] = true
+            local repo, pkg = line:match("^([^/]+)/(.+)$")
+            if repo and pkg then
+                if not config.masked_packages[repo] then
+                    config.masked_packages[repo] = {}
+                end
+                config.masked_packages[repo][pkg] = true
+            else
+                config.masked_packages[line] = true
+            end
         end
     end
     f:close()

@@ -61,6 +61,7 @@ function builder.build(manifest, build_dir, build_type, options)
 	env.meson = function(args)
 		return builder.meson_wrapper(build_dir, args)
 	end
+	env.exec = os.execute
 	local build_fn
 	if build_type == "source" then
 		if not manifest.source then
@@ -124,10 +125,12 @@ end
 --
 -- @param build_dir string Absolute path to the directory where make command should be executed
 -- @param make_opts table Configuration options containing: jobs (parallel build limit),
---                      load (system load threshold), and extra (additional make flags)
+-- load (system load threshold), and extra (additional make flags)
 -- @param extra_args table Optional array of additional arguments passed directly to make command
 -- @param is_build boolean True for compilation with parallel jobs, false for installation mode
-function builder.make_wrapper(build_dir, make_opts, extra_args, is_build)
+-- @param destvar string Variable name for destination directory (for `make install`) (default: DESTDIR)
+function builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destvar)
+    destvar = destvar or "DESTDIR"
 	local cmd = "cd " .. build_dir .. " && make"
 	if is_build == nil or is_build == true then
 		if make_opts.jobs then
@@ -140,7 +143,7 @@ function builder.make_wrapper(build_dir, make_opts, extra_args, is_build)
 			cmd = cmd .. " " .. make_opts.extra
 		end
 	else
-		cmd = cmd .. " DESTDIR=" .. config.TEMP_INSTALL_PATH .. "/" .. build_dir:match("([^/]+)$") .. " install"
+		cmd = cmd .. " " .. destvar .. "=" .. config.TEMP_INSTALL_PATH .. "/" .. build_dir:match("([^/]+)$") .. " install"
 	end
 	if extra_args then
 		for _, arg in ipairs(extra_args) do

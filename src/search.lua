@@ -18,19 +18,36 @@ local loader = require("src.loader")
 function search.query(pattern)
     local results = {}
     if not config.repos or next(config.repos) == nil then
-        print("No repositories configured. Please check your configuration.")
+        print("error: no repositories configured.")
         return
     end
     for repo_name, repo_path in pairs(config.repos) do
-        search.scan_repo(repo_path, pattern, results)
+        search.scan_repo(repo_name, repo_path, pattern, results)
     end
     if #results == 0 then
-        print("No packages found matching: " .. pattern)
+        print("error: target not found: " .. pattern)
         return
     end
-    print("Found " .. #results .. " package(s):")
     for _, pkg in ipairs(results) do
-        print("  " .. pkg.name .. " - " .. pkg.description)
+        local repo = pkg.repository or "local"
+        local masked = ""
+        if config.masked_packages[pkg.name] then
+            masked = "\27[1;31m[ Masked ]\27[0m"
+        elseif config.masked_packages[repo] and config.masked_packages[repo][pkg.name] then
+            masked = "\27[1;31m[ Masked ]\27[0m"
+        end
+        local latest = pkg.version or "unknown"
+        local installed = pkg.installed_version or "\27[31m[ Not Installed ]\27[0m"
+        local homepage = pkg.homepage or "No homepage"
+        local description = pkg.description or "No description"
+        local license = pkg.license or "unknown"
+        print("\27[1;32m*\27[0m  " .. repo .. "/" .. pkg.name .. " " .. masked)
+        print("      Latest version available: " .. latest)
+        print("      Latest version installed: " .. installed)
+        print("      Homepage:      " .. homepage)
+        print("      Description:   " .. description)
+        print("      License:       " .. license)
+        print()
     end
 end
 
@@ -46,7 +63,7 @@ end
 -- @param pattern string Search pattern for matching packages
 -- @param results table Accumulator table where matching packages will be stored
 
-function search.scan_repo(repo_path, pattern, results)
+function search.scan_repo(repo_name, repo_path, pattern, results)
     pattern = pattern or ""
     if not repo_path or repo_path == "" then
         return
@@ -75,10 +92,12 @@ function search.scan_repo(repo_path, pattern, results)
                         desc_match = manifest.description:lower():find(pattern:lower(), 1, true)
                     end
                     if pattern == "" or name_match or desc_match then
+                        manifest.repository = repo_name
                         table.insert(results, manifest)
                     end
                 elseif manifest.name then
                     if pattern == "" or manifest.name:find(pattern, 1, true) then
+                        manifest.repository = repo_name
                         table.insert(results, manifest)
                     end
                 end

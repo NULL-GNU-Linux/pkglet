@@ -14,6 +14,19 @@ local config = require("src.config")
 -- @param package_name string The full package name using dot notation (e.g., "org.example.package")
 -- @return string Absolute path to the found manifest file or throws error if not found
 function loader.find_manifest(package_name)
+    local repo, pkg_name = package_name:match("^([^/]+)/(.+)$")
+    if repo and pkg_name then
+        local repo_path = config.repos[repo]
+        if repo_path then
+            local manifest_path = repo_path .. "/" .. pkg_name:gsub("%.", "/") .. "/manifest.lua"
+            local f = io.open(manifest_path, "r")
+            if f then
+                f:close()
+                return manifest_path
+            end
+        end
+        error("package not found: " .. package_name)
+    end
     for repo_name, repo_path in pairs(config.repos) do
         local manifest_path = repo_path .. "/" .. package_name:gsub("%.", "/") .. "/manifest.lua"
         local f = io.open(manifest_path, "r")
@@ -38,6 +51,10 @@ function loader.load_manifest(package_name)
     local manifest_path = loader.find_manifest(package_name)
     local env = {
         make = function() end,
+        cmake = function() end,
+        exec = function() end,
+        ninja = function() end,
+        meson = function() end,
         OPTIONS = {},
     }
     setmetatable(env, {__index = _G})
@@ -75,6 +92,9 @@ function loader.validate_manifest(manifest)
 
     if config.masked_packages[manifest.name] then
         error("package is masked: " .. manifest.name)
+    end
+    if manifest.repository and config.masked_packages[manifest.repository] and config.masked_packages[manifest.repository][manifest.name] then
+        error("package is masked: " .. manifest.repository .. "/" .. manifest.name)
     end
 end
 
