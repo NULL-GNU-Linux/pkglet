@@ -224,10 +224,11 @@ end
 
 Available in hook functions:
 
-- `make(args, is_build)` - Run make with configured options
+- `make(args, is_build, destvar)` - Run make with configured options.
 - `cmake(args)` - Run cmake
 - `configure(args)` - Run ./configure
 - `ninja(args)` - Run ninja with configured options
+- `exec(command)` - An alias to Lua's `os.execute`
 - `OPTIONS` - Table of enabled package options
 
 ### Source Types

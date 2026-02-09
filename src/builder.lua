@@ -43,8 +43,8 @@ function builder.build(manifest, build_dir, build_type, options)
 	local make_opts = config.get_make_opts()
 	local env = manifest._env
 	env.OPTIONS = options or {}
-	env.make = function(extra_args, is_build)
-		return builder.make_wrapper(build_dir, make_opts, extra_args, is_build)
+	env.make = function(extra_args, is_build, destvar)
+		return builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destvar)
 	end
 	env.cmake = function(args)
 		return builder.cmake_wrapper(build_dir, args)
