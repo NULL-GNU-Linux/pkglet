@@ -159,11 +159,14 @@ pkglet install org.kernel.linux --force
 ### GPG Operations
 
 ```bash
-pkglet gpg generate-key "Repo Maintainer" "maintainer@example.com"
-pkglet gpg import-key /path/to/key.pub
-pkglet gpg list-keys
-pkglet gpg sign-package package.tar.gz
-pkglet gpg verify-package package.tar.gz
+pkglet G list-keys                          # List all keys
+pkglet G import-key /path/to/key.pub          # Import key from file
+pkglet G import-key-server KEYID               # Import key from server
+pkglet G generate-key "Name" email@example.com  # Generate new key pair
+pkglet G export-key KEYID [output-file]       # Export public key
+pkglet G sign-package package.tar.gz [key-id]   # Sign package file
+pkglet G verify-package package.tar.gz.asc [sig-file] # Verify signature
+pkglet G delete-key KEYID                      # Delete key
 ```
 
 ### Search Packages

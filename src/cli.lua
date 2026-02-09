@@ -117,6 +117,7 @@ function cli.print_help()
 "   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
 "   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
 "   \27[1;37mM/generate-manifest <repo>\27[0m Generate repository manifest\n" ..
+"   \27[1;37mG/gpg <command> [args]\27[0m      GPG key management\n" ..
 "   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
 "   \27[1;37mR/reverse-deps <package>\27[0m Show reverse dependencies\n" ..
 "\n" ..
@@ -144,6 +145,11 @@ function cli.print_help()
 "   pkglet d org.kernel.linux --to v6.15.0\n" ..
 "   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
 "   pkglet L org.kernel.linux\n" ..
+"   pkglet G list-keys\n" ..
+"   pkglet G import-key /path/to/key.pub\n" ..
+"   pkglet G generate-key \"Repo Maintainer\" maintainer@example.com\n" ..
+"   pkglet gpg sign-package package.tar.gz\n" ..
+"   pkglet gpg verify-package package.tar.gz.asc\n" ..
 "   pkglet R org.kernel.linux\n" ..
 "   pkglet reverse-deps org.kernel.linux\n" ..
 "   pkglet pin org.kernel.linux 6.17.5\n" ..
