@@ -30,7 +30,6 @@ function installer.install(manifest, args)
 
     local packages_to_install = {}
     packages_to_install[manifest.name] = manifest.version
-
     local deps = installer.get_dependencies(manifest)
     for dep_name, dep_version in pairs(deps) do
         if not resolver.is_installed(dep_name) then
@@ -38,11 +37,10 @@ function installer.install(manifest, args)
         end
     end
 
-    print("Packages to install:")
+    print("Package to install:")
     for name, version in pairs(packages_to_install) do
         print("  " .. name .. " " .. version)
     end
-    print("Total packages: " .. installer.count_keys(packages_to_install))
     print("")
 
     if not args.noask then
@@ -55,7 +53,6 @@ function installer.install(manifest, args)
     end
 
     print("Installing " .. manifest.name .. " " .. manifest.version)
-
     local build_type = installer.determine_build_type(manifest, args.build_from)
     print("Build type: " .. build_type)
     local options = installer.merge_options(manifest, args.options)
