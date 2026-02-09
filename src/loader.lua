@@ -55,6 +55,8 @@ function loader.load_manifest(package_name)
         exec = function() end,
         ninja = function() end,
         meson = function() end,
+        CONFIG = {},
+        ROOT = "/",
         OPTIONS = {},
     }
     setmetatable(env, {__index = _G})
