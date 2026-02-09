@@ -94,10 +94,43 @@ local function main()
             print("Error: Repository path required or no repositories configured")
         end
 
-    elseif args.command == "G" or args.command == "gpg" then
+        elseif args.command == "G" or args.command == "gpg" then
         local gpg = require("src.gpg")
         local gpg_cmd = args.package or ""
-        
+        if args[3] == "generate-key" or gpg_cmd == "generate-key" then
+            local remaining_args = {}
+            for i = 3, #args do
+                table.insert(remaining_args, args[i])
+            end
+
+            local name = ""
+            local email = nil
+            local found_email = false
+
+            for i, arg in ipairs(remaining_args) do
+                if arg:match("@") then
+                    email = arg
+                    found_email = true
+                elseif not found_email and arg:sub(1, 1) == "\"" then
+                    name = arg
+                elseif not found_email and name == "" then
+                    name = arg
+                end
+            end
+
+            if name and email then
+                name = name:gsub("^\"?([^\"]*)\"?$", "%1")  -- Remove surrounding quotes
+                io.write("Enter passphrase (optional, press Enter for none): ")
+                local passphrase = io.read()
+                passphrase = passphrase:trim()
+                gpg.generate_key(name, email, passphrase)
+            else
+                print("Error: name and email required")
+                print("Usage: pkglet G generate-key \"Name\" email@example.com")
+            end
+            return
+        end
+
         if gpg_cmd == "list-keys" then
             local keys = gpg.list_keys()
             if #keys == 0 then
@@ -108,7 +141,7 @@ local function main()
                     print("  " .. key.key_id .. " - " .. key.user_id .. " (" .. key.trust_name .. ")")
                 end
             end
-            
+
         elseif gpg_cmd == "import-key" then
             local key_file = args.query
             if not key_file then
@@ -117,7 +150,7 @@ local function main()
             else
                 gpg.import_key(key_file)
             end
-            
+
         elseif gpg_cmd == "import-key-server" then
             local key_id = args.query
             if not key_id then
@@ -126,21 +159,12 @@ local function main()
             else
                 gpg.import_key(key_id, true)
             end
-            
-        elseif gpg_cmd == "generate-key" then
-            local name = args.query
-            local email = args.target_version
-            
-            if not name or not email then
-                print("Error: name and email required")
-                print("Usage: pkglet G generate-key \"Name\" email@example.com")
-            else
-                io.write("Enter passphrase (optional, press Enter for none): ")
-                local passphrase = io.read()
-                passphrase = passphrase:trim()
-                gpg.generate_key(name, email, passphrase)
-            end
-            
+
+        elseif gpg_cmd == "generate-key" and not args.query then
+            print("Error: name and email required")
+            print("Usage: pkglet G generate-key \"Name\" email@example.com")
+            print("       pkglet G generate-key \"John Doe\" john@example.com")
+
         elseif gpg_cmd == "export-key" then
             local key_id = args.query
             if not key_id then
@@ -150,40 +174,40 @@ local function main()
                 local output_file = args.target_version or key_id .. ".pub"
                 gpg.export_public_key(key_id, output_file)
             end
-            
+
         elseif gpg_cmd == "sign-package" then
             local package_file = args.query
             local key_id = args.target_version
-            
+
             if not package_file then
                 print("Error: package file path required")
                 print("Usage: pkglet G sign-package package.tar.gz [key-id]")
             else
                 gpg.sign_package(package_file, key_id)
             end
-            
+
         elseif gpg_cmd == "verify-package" then
             local package_file = args.query
             local sig_file = args.target_version
-            
+
             if not package_file then
                 print("Error: package file path required")
                 print("Usage: pkglet G verify-package package.tar.gz.asc [signature-file]")
             else
                 local result = gpg.verify_package(package_file, sig_file)
-                
+
                 if result.status == "valid" then
                     print("✓ Valid signature from key " .. (result.key_id or "unknown"))
                     print("  Trust level: " .. (result.key_trusted and "trusted" or "untrusted"))
                 elseif result.status == "invalid" then
                     print("✗ Invalid signature from key " .. (result.key_id or "unknown"))
                 elseif result.status == "no_key" then
-                    print("⚠ No public key found for signature (key ID: " .. (result.key_id or "unknown") .. ")")
+                    print("No public key found for signature (key ID: " .. (result.key_id or "unknown") .. ")")
                 else
                     print("✗ Verification error: " .. (result.error or result.status))
                 end
             end
-            
+
         elseif gpg_cmd == "delete-key" then
             local key_id = args.query
             if not key_id then
@@ -195,7 +219,7 @@ local function main()
                 local delete_secret_bool = delete_secret:lower():sub(1,1) == 'y'
                 gpg.delete_key(key_id, delete_secret_bool)
             end
-            
+
         else
             print("Available GPG commands:")
             print("  list-keys                          - List all keys")
@@ -215,7 +239,7 @@ local function main()
     elseif args.command == "R" or args.command == "reverse-deps" then
         local conflict = require("src.conflict")
         local reverse_deps = conflict.get_reverse_dependencies(args.package)
-        
+
         if #reverse_deps == 0 then
             print("No packages depend on " .. args.package)
         else
