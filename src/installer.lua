@@ -18,11 +18,23 @@ local resolver = require("src.resolver")
 -- @param manifest table Complete package manifest containing metadata, dependencies, sources, and build instructions
 -- @param args table Installation arguments including bootstrap options, build preferences, and custom configuration overrides
 function installer.install(manifest, args)
+    if os.getenv("PKGLET_DEBUG") == "1" then
+        print("DEBUG: args =")
+        for k, v in pairs(args) do
+            print("  " .. k .. " = " .. tostring(v))
+        end
+    end
+
     if args.bootstrap_to then
         config.set_bootstrap_root(args.bootstrap_to)
         print("Bootstrap mode: installing to " .. config.ROOT)
     end
     resolver.check_conflicts(manifest)
+
+    if args.options.hook then
+        return installer.run_single_hook(manifest, args)
+    end
+
     if resolver.is_installed(manifest.name) then
         print("Package already installed: " .. manifest.name)
         return
@@ -254,6 +266,78 @@ function installer.remove_files(manifest)
     print("Removing files...")
     local temp_path = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
     os.execute("rm -rf " .. temp_path)
+end
+
+function installer.run_single_hook(manifest, args)
+    if os.getenv("PKGLET_DEBUG") == "1" then
+        print("options =")
+        for k, v in pairs(args.options) do
+            print("  " .. k .. " = " .. tostring(v))
+        end
+    end
+
+    local build_type = installer.determine_build_type(manifest, args.build_from)
+    local options = installer.merge_options(manifest, args.options)
+    local build_dir = config.BUILD_PATH .. "/" .. manifest.name
+    local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
+
+    os.execute("rm -rf " .. build_dir)
+    os.execute("mkdir -p " .. build_dir)
+    os.execute("rm -rf " .. temp_install_dir)
+    os.execute("mkdir -p " .. temp_install_dir)
+
+    local source_spec
+    if build_type == "source" then
+        source_spec = manifest.sources.source
+    else
+        source_spec = manifest.sources.binary
+    end
+
+    if source_spec then
+        fetcher.fetch(source_spec, build_dir)
+    end
+
+    local build_fn
+    if build_type == "source" then
+        build_fn = manifest.source()
+    else
+        build_fn = manifest.binary()
+    end
+
+    local hooks = {}
+
+    local function hook(name)
+        return function(fn)
+            hooks[name] = fn
+        end
+    end
+
+    build_fn(hook)
+
+    local hook_name = args.options.hook
+    if hook_name == "prepare" and hooks.prepare then
+        print("Running prepare hook...")
+        hooks.prepare()
+    elseif hook_name == "build" and hooks.build then
+        print("Running build hook...")
+        hooks.build()
+    elseif hook_name == "pre_install" and hooks.pre_install then
+        print("Running pre_install hook...")
+        hooks.pre_install()
+    elseif hook_name == "install" and hooks.install then
+        print("Running install hook...")
+        hooks.install()
+        installer.copy_from_temp(manifest)
+    elseif hook_name == "post_install" and hooks.post_install then
+        installer.copy_from_temp(manifest)
+        print("Running post_install hook...")
+        hooks.post_install()
+    else
+        print("Hook '" .. hook_name .. "' not found or not available")
+        return
+    end
+
+    print("Hook '" .. tostring(hook_name) .. "' completed successfully")
 end
 
 return installer
