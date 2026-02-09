@@ -45,6 +45,6 @@ end
 
 local status, err = pcall(main)
 if not status then
-    io.stderr:write("pkglet: error: " .. tostring(err) .. "\n")
+    io.stderr:write("\27[1;32mpkglet\27[0m: \27[1;31merror\27[0m: " .. tostring(err) .. "\n")
     os.exit(1)
 end

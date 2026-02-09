@@ -18,14 +18,14 @@ local loader = require("src.loader")
 function search.query(pattern)
     local results = {}
     if not config.repos or next(config.repos) == nil then
-        print("error: no repositories configured.")
+        print("\27[1;31merror\27[0m: no repositories configured.")
         return
     end
     for repo_name, repo_path in pairs(config.repos) do
         search.scan_repo(repo_name, repo_path, pattern, results)
     end
     if #results == 0 then
-        print("error: target not found: " .. pattern)
+        print("\27[1;31merror\27[0m: target not found: " .. pattern)
         return
     end
     for _, pkg in ipairs(results) do
