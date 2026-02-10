@@ -595,26 +595,4 @@ function installer.downgrade(package_name, target_version, args)
     installer.install(manifest, args)
 end
 
---- List all available versions of a package
--- @param package_name string Name of the package
-function installer.list_versions(package_name)
-    local version_module = require("src.version")
-    local resolver = require("src.resolver")
-    
-    local available_versions = version_module.get_available_versions(package_name)
-    local current_version = installer.get_installed_version(package_name)
-    
-    print("Available versions for " .. package_name .. ":")
-    if #available_versions == 0 then
-        print("  No predefined versions found. You can specify any version string (tag, commit hash, etc.)")
-    else
-        for i = #available_versions, 1, -1 do
-            local version = available_versions[i]
-            local marker = version == current_version and " [installed]" or ""
-            print("  " .. version .. marker)
-        end
-    end
-    print("  Note: You can downgrade to any version string (git commit, tag, etc.)")
-end
-
 return installer

@@ -111,14 +111,12 @@ function cli.print_help()
 "   \27[1;37mu/uninstall <package>\27[0m      Uninstall a package\n" ..
 "   \27[1;37mU/upgrade <package>\27[0m        Upgrade a package\n" ..
 "   \27[1;37md/downgrade <package>\27[0m      Downgrade a package\n" ..
-"   \27[1;37mL/list-versions <package>\27[0m List package versions\n" ..
 "   \27[1;37mpin <package> [version]\27[0m    Pin package to version\n" ..
 "   \27[1;37munpin <package>\27[0m            Unpin package\n" ..
 "   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
 "   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
 
 "   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
-"   \27[1;37mR/reverse-deps <package>\27[0m Show reverse dependencies\n" ..
 "\n" ..
 "OPTIONS:\n" ..
 "   \27[1;37m--source\27[0m                   Build from source\n" ..
@@ -143,10 +141,7 @@ function cli.print_help()
 "   pkglet downgrade org.kernel.linux --to 6.15.0\n" ..
 "   pkglet d org.kernel.linux --to v6.15.0\n" ..
 "   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
-"   pkglet L org.kernel.linux\n" ..
 
-"   pkglet R org.kernel.linux\n" ..
-"   pkglet reverse-deps org.kernel.linux\n" ..
 "   pkglet pin org.kernel.linux 6.17.5\n" ..
 "   pkglet unpin org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux\n" ..

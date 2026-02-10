@@ -116,13 +116,6 @@ pkglet d org.kernel.linux --to a1b2c3d4
 pkglet downgrade org.kernel.linux --to 6.15.0 --pin
 ```
 
-### List Package Versions
-
-```bash
-pkglet L org.kernel.linux
-pkglet list-versions org.kernel.linux
-```
-
 ### Pin/Unpin Packages
 
 ```bash
@@ -135,13 +128,6 @@ pkglet unpin org.kernel.linux
 
 ```bash
 pkglet u org.kernel.linux
-```
-
-### Reverse Dependencies
-
-```bash
-pkglet R org.kernel.linux
-pkglet reverse-deps org.kernel.linux
 ```
 
 ### Force Installation

@@ -280,27 +280,7 @@ end
 --- Get reverse dependencies (packages that depend on given package)
 -- @param package_name string Name of package to check
 -- @return table Array of packages that depend on the given package
-function conflict.get_reverse_dependencies(package_name)
-    local version_module = require("src.version")
-    local reverse_deps = {}
-    
-    for _, installed_pkg in ipairs(conflict.get_installed_packages()) do
-        local manifest = conflict.get_installed_manifest(installed_pkg)
-        if manifest then
-            local deps = installer.get_dependencies(manifest)
-            for dep_name, dep_constraint in pairs(deps) do
-                if dep_name == package_name then
-                    local current_version = installer.get_installed_version(package_name)
-                    if not dep_constraint:match(":") or version_module.satisfies(dep_constraint, current_version) then
-                        table.insert(reverse_deps, installed_pkg)
-                    end
-                end
-            end
-        end
-    end
-    
-    return reverse_deps
-end
+
 
 --- Update dependency resolution to handle virtual packages
 -- @param dependencies table Dependencies to resolve

@@ -53,8 +53,7 @@ local function main()
             config.pin_package(args.package, target_version)
         end
 
-    elseif args.command == "L" or args.command == "list-versions" then
-        installer.list_versions(args.package)
+    
 
     elseif args.command == "pin" then
         local package_name = args.package
@@ -93,19 +92,7 @@ local function main()
         local manifest = loader.load_manifest(args.package)
         loader.print_info(manifest)
 
-    elseif args.command == "R" or args.command == "reverse-deps" then
-        local conflict = require("src.conflict")
-        local reverse_deps = conflict.get_reverse_dependencies(args.package)
-
-        if #reverse_deps == 0 then
-            print("No packages depend on " .. args.package)
-        else
-            print("Packages that depend on " .. args.package .. ":")
-            for _, dep_pkg in ipairs(reverse_deps) do
-                local version = installer.get_installed_version(dep_pkg)
-                print("  " .. dep_pkg .. " (" .. (version or "unknown") .. ")")
-            end
-        end
+    
 
     elseif args.command == "c" or args.command == "clean" then
         os.execute("rm -rf " .. config.CACHE_PATH)
