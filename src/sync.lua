@@ -10,7 +10,6 @@
 
 local sync = {}
 local config = require("src.config")
-local progress = require("src.progress")
 
 --- Update all configured repositories in sequence
 --
@@ -24,21 +23,12 @@ local progress = require("src.progress")
 -- This is typically called during 'pkglet S' command execution to ensure
 -- all package repositories are synchronized with their remote counterparts.
 function sync.update_repos()
-	local repo_list = {}
-	for repo_name, _ in pairs(config.repos) do
-		table.insert(repo_list, repo_name)
-	end
-	
-	progress.start_operation("repository synchronization")
-	
-	for i, repo_name in ipairs(repo_list) do
-		local repo_path = config.repos[repo_name]
-		progress.update_progress(i, #repo_list, "Syncing repositories")
-		progress.update_status("Syncing " .. repo_name .. " -> " .. repo_path)
+	print("syncing repositories...")
+	for repo_name, repo_path in pairs(config.repos) do
+		print("  " .. repo_name .. " -> " .. repo_path)
 		sync.update_repo(repo_path)
 	end
-	
-	progress.finish_operation(true, "Repository synchronization complete")
+	print("sync complete.")
 end
 
 --- Update a single repository using git pull
@@ -59,12 +49,10 @@ function sync.update_repo(repo_path)
 		local cmd = "cd " .. repo_path .. " && git pull"
 		local ok, _, code = os.execute(cmd)
 		if not ok or code ~= 0 then
-			progress.update_status("Warning: failed to update repository")
-		else
-			progress.update_status("Successfully updated repository")
+			print("    Warning: failed to update repository")
 		end
 	else
-		progress.update_status("Not a git repository, skipping...")
+		print("    Not a git repository, skipping...")
 	end
 end
 

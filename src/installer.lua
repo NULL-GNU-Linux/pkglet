@@ -7,7 +7,6 @@ local fetcher = require("src.fetcher")
 local builder = require("src.builder")
 local resolver = require("src.resolver")
 local loader = require("src.loader")
-local progress = require("src.progress")
 
 --- Install a package from manifest with comprehensive dependency resolution and build orchestration
 -- This function is the core installation routine that handles the complete package lifecycle
@@ -31,10 +30,10 @@ function installer.install(manifest, args)
         config.set_bootstrap_root(args.bootstrap_to)
         print("Bootstrap mode: installing to " .. config.ROOT)
     end
-    
+
     local conflict = require("src.conflict")
     local conflicts = conflict.check_conflicts(manifest.name, manifest)
-    
+
     if #conflicts > 0 then
         local can_resolve = conflict.resolve_conflicts(manifest.name, conflicts, args.force)
         if not can_resolve then
@@ -52,7 +51,7 @@ function installer.install(manifest, args)
     end
 
     local packages_to_install
-    
+
     if args.nodeps then
         packages_to_install = {}
         if not resolver.is_installed(manifest.name) then
@@ -60,7 +59,7 @@ function installer.install(manifest, args)
         end
     else
         packages_to_install = installer.resolve_dependencies(manifest, {})
-        
+
         if args.options and args.options.with_optional then
             print("Installing optional dependencies...")
             local optional_packages = installer.resolve_optional_dependencies(manifest, {})
@@ -87,7 +86,6 @@ function installer.install(manifest, args)
         print("")
         return
     end
-
     if not args.noask then
         io.write("Proceed with installation? [Y/n] ")
         local response = io.read()
@@ -101,17 +99,12 @@ function installer.install(manifest, args)
     for name, version in pairs(packages_to_install) do
         table.insert(install_order, name)
     end
-    
-    progress.start_operation("package installation")
-    progress.update_status("Resolving dependencies...")
-    
-    local total_packages = #install_order
-    for i, name in ipairs(install_order) do
+
+    for _, name in ipairs(install_order) do
         local pkg_manifest = loader.load_manifest(name)
-        progress.update_progress(i, total_packages, "Installing packages")
-        progress.update_status("Installing " .. pkg_manifest.name .. " " .. pkg_manifest.version)
-        
+        print("Installing " .. pkg_manifest.name .. " " .. pkg_manifest.version)
         local build_type = installer.determine_build_type(pkg_manifest, args.build_from)
+        print("Build type: " .. build_type)
         local options = installer.merge_options(pkg_manifest, args.options)
         local build_dir = config.BUILD_PATH .. "/" .. pkg_manifest.name
         local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. pkg_manifest.name
@@ -119,28 +112,20 @@ function installer.install(manifest, args)
         os.execute("mkdir -p " .. build_dir)
         os.execute("rm -rf " .. temp_install_dir)
         os.execute("mkdir -p " .. temp_install_dir)
-        
         local source_spec
         if build_type == "source" then
             source_spec = pkg_manifest.sources.source
-            progress.update_status("Downloading source for " .. pkg_manifest.name)
         else
             source_spec = pkg_manifest.sources.binary
-            progress.update_status("Downloading binary for " .. pkg_manifest.name)
         end
         if source_spec then
             fetcher.fetch(source_spec, build_dir)
         end
-        
-        progress.update_status("Building " .. pkg_manifest.name)
         builder.build(pkg_manifest, build_dir, build_type, options)
-        
-        progress.update_status("Installing " .. pkg_manifest.name)
         installer.copy_from_temp(pkg_manifest)
         installer.record_installation(pkg_manifest)
+        print("Successfully installed " .. pkg_manifest.name)
     end
-    
-    progress.finish_operation(true, "Installation completed successfully")
 end
 
 --- Uninstall a package with custom hook support and thorough cleanup
@@ -153,17 +138,13 @@ end
 -- changes while ensuring no remnants remain after removal.
 -- @param manifest table Package manifest containing uninstall hooks and metadata for proper cleanup
 function installer.uninstall(manifest)
-    progress.start_operation("package uninstallation")
-    
+    print("Uninstalling " .. manifest.name)
     if not resolver.is_installed(manifest.name) then
-        progress.finish_operation(false, "Package not installed: " .. manifest.name)
+        print("Package not installed: " .. manifest.name)
         return
     end
 
-    progress.update_status("Uninstalling " .. manifest.name)
-
     if manifest.uninstall then
-        progress.update_status("Running pre-uninstall hooks")
         local build_dir = config.BUILD_PATH .. "/" .. manifest.name
         local uninstall_fn = manifest.uninstall()
         local hooks = {
@@ -179,20 +160,14 @@ function installer.uninstall(manifest)
 
         uninstall_fn(hook)
         if hooks.pre_uninstall then hooks.pre_uninstall() end
-        
-        progress.update_status("Removing files for " .. manifest.name)
         installer.remove_files(manifest)
-        
-        progress.update_status("Running post-uninstall hooks")
         if hooks.post_uninstall then hooks.post_uninstall() end
     else
-        progress.update_status("Removing files for " .. manifest.name)
         installer.remove_files(manifest)
     end
 
-    progress.update_status("Removing installation record")
     installer.remove_installation_record(manifest)
-    progress.finish_operation(true, "Successfully uninstalled " .. manifest.name)
+    print("Successfully uninstalled " .. manifest.name)
 end
 
 --- Determine optimal build type based on user preference and package availability
@@ -349,41 +324,41 @@ function installer.resolve_dependencies(manifest, visited)
     local version_module = require("src.version")
     visited = visited or {}
     local packages_to_install = {}
-    
+
     if visited[manifest.name] then
         return {}
     end
     visited[manifest.name] = true
-    
+
     if not resolver.is_installed(manifest.name) then
         packages_to_install[manifest.name] = manifest.version
     end
-    
+
     local deps = installer.get_dependencies(manifest)
     local conflict = require("src.conflict")
     local resolved_deps = conflict.resolve_virtual_dependencies(deps)
-    
+
     for dep_name, dep_constraint in pairs(resolved_deps) do
         local is_build_dep = dep_constraint:match(":build$") ~= nil
         local is_optional_dep = dep_constraint:match(":optional$") ~= nil
-        
+
         if is_build_dep then
             dep_constraint = dep_constraint:gsub(":build$", "")
         elseif is_optional_dep then
             dep_constraint = dep_constraint:gsub(":optional$", "")
         end
-        
+
         if not resolver.is_installed(dep_name) and not visited[dep_name] then
             if is_optional_dep then
                 print("Optional dependency " .. dep_name .. " not installed, skipping")
             else
                 local available_versions = version_module.get_available_versions(dep_name)
                 local selected_version = version_module.highest_satisfying(available_versions, dep_constraint)
-                
+
                 if not selected_version then
                     error("no satisfying version found for " .. dep_name .. " " .. dep_constraint)
                 end
-                
+
                 local dep_manifest = loader.load_manifest(dep_name)
                 dep_manifest.version = selected_version
                 local dep_packages = installer.resolve_dependencies(dep_manifest, visited)
@@ -405,7 +380,7 @@ function installer.resolve_dependencies(manifest, visited)
             end
         end
     end
-    
+
     return packages_to_install
 end
 
@@ -504,12 +479,10 @@ function installer.resolve_optional_dependencies(manifest, visited)
     local loader = require("src.loader")
     visited = visited or {}
     local optional_packages = {}
-    
     if visited[manifest.name] then
         return {}
     end
     visited[manifest.name] = true
-    
     if manifest.optional_depends then
         for _, dep in ipairs(manifest.optional_depends) do
             local dep_name, dep_constraint
@@ -521,11 +494,9 @@ function installer.resolve_optional_dependencies(manifest, visited)
                 dep_name = dep.name
                 dep_constraint = dep.constraint or "*"
             end
-            
             if not resolver.is_installed(dep_name) and not visited[dep_name] then
                 local available_versions = version_module.get_available_versions(dep_name)
                 local selected_version = version_module.highest_satisfying(available_versions, dep_constraint)
-                
                 if selected_version then
                     local dep_manifest = loader.load_manifest(dep_name)
                     dep_manifest.version = selected_version
@@ -540,7 +511,6 @@ function installer.resolve_optional_dependencies(manifest, visited)
             end
         end
     end
-    
     return optional_packages
 end
 
@@ -551,7 +521,6 @@ function installer.get_installed_version(package_name)
     local db_file = config.DB_PATH .. "/" .. package_name:gsub("%.", "-")
     local f = io.open(db_file, "r")
     if not f then return nil end
-    
     local version = nil
     for line in f:lines() do
         local key, value = line:match("^([^=]+)=(.+)$")
@@ -571,25 +540,19 @@ function installer.upgrade(package_name, args)
     local version_module = require("src.version")
     local loader = require("src.loader")
     local resolver = require("src.resolver")
-    
     if not resolver.is_installed(package_name) then
         print("Package not installed: " .. package_name)
         return
     end
-    
     local current_version = installer.get_installed_version(package_name)
     local latest_version = version_module.get_latest_version(package_name, current_version)
-    
     if not latest_version then
         print("Package " .. package_name .. " is already up to date at version " .. current_version)
         return
     end
-    
     print("Upgrading " .. package_name .. " from " .. current_version .. " to " .. latest_version)
-    
     local manifest = loader.load_manifest(package_name)
     manifest.version = latest_version
-    
     installer.uninstall(manifest)
     installer.install(manifest, args)
 end
@@ -602,19 +565,14 @@ function installer.downgrade(package_name, target_version, args)
     local version_module = require("src.version")
     local loader = require("src.loader")
     local resolver = require("src.resolver")
-    
     if not resolver.is_installed(package_name) then
         print("Package not installed: " .. package_name)
         return
     end
-    
     local current_version = installer.get_installed_version(package_name)
-    
     print("Downgrading " .. package_name .. " from " .. current_version .. " to " .. target_version)
-    
     local manifest = loader.load_manifest(package_name)
     manifest.version = target_version
-    
     installer.uninstall(manifest)
     installer.install(manifest, args)
 end
