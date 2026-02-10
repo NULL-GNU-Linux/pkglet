@@ -153,7 +153,7 @@ function builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destva
 		end
 	end
 
-print("-> " .. cmd)
+print("\27[7m-> " .. cmd .. "\27[0m")
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
 		error("make failed")
@@ -184,7 +184,7 @@ function builder.cmake_wrapper(build_dir, args)
 			cmd = cmd .. " " .. arg
 		end
 	end
-print("-> " .. cmd)
+print("\27[7m-> " .. cmd .. "\27[0m")
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
 		error("cmake failed")
@@ -216,7 +216,7 @@ function builder.configure_wrapper(build_dir, args, name)
 			cmd = cmd .. " " .. arg
 		end
 	end
-print("-> " .. cmd)
+print("\27[7m-> " .. cmd .. "\27[0m")
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
 		error("configure failed")
@@ -256,7 +256,7 @@ function builder.ninja_wrapper(build_dir, make_opts, args)
 		end
 	end
 
-print("-> " .. cmd)
+print("\27[7m-> " .. cmd .. "\27[0m")
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
 		error("ninja failed")
@@ -292,7 +292,7 @@ function builder.install_wrapper(build_dir, args)
 		end
 	end
 
-print("-> " .. cmd)
+print("\27[7m-> " .. cmd .. "\27[0m")
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
 		error("install failed")
@@ -316,7 +316,7 @@ function builder.meson_wrapper(build_dir, args)
 			cmd = cmd .. " " .. arg
 		end
 	end
-print("-> " .. cmd)
+print("\27[7m-> " .. cmd .. "\27[0m")
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
 		error("meson failed")

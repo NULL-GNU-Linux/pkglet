@@ -74,7 +74,7 @@ function installer.install(manifest, args)
     if installer.count_keys(packages_to_install) > 0 then
         print("Packages to install:")
         for name, version in pairs(packages_to_install) do
-            print("  " .. name .. " " .. version)
+            print("  \27[7m" .. name .. "\27[0m " .. version)
         end
         print("")
     else
@@ -87,7 +87,7 @@ function installer.install(manifest, args)
         return
     end
     if not args.noask then
-        io.write("Proceed with installation? [Y/n] ")
+        io.write("Proceed with installation? \27[7m[Y/n]\27[0m ")
         local response = io.read()
         if response and response:lower():sub(1,1) == 'n' then
             print("Installation cancelled.")
