@@ -90,7 +90,6 @@ function pkg.source()
 end
 
 function pkg.binary()
-	tmpdir = os.getenv("HOME") .. "/.cache/pkglet/build/" .. pkg.name
 	return function(hook)
 		hook("pre_install")(function()
 			print("Preparing binary installation...")
