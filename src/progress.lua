@@ -37,6 +37,7 @@ local function render(progress_text)
     end
 
     io.write(string.format("\27[%d;1H", rows))
+    io.write("\27[0J")
     
     local progress_width = math.floor(cols * 0.6)
     local percent_pos = progress_text:match("(%d+)%%")
