@@ -7,6 +7,7 @@ local fetcher = require("src.fetcher")
 local builder = require("src.builder")
 local resolver = require("src.resolver")
 local loader = require("src.loader")
+local progress = require("src.progress")
 
 --- Install a package from manifest with comprehensive dependency resolution and build orchestration
 -- This function is the core installation routine that handles the complete package lifecycle
@@ -101,11 +102,16 @@ function installer.install(manifest, args)
         table.insert(install_order, name)
     end
     
-    for _, name in ipairs(install_order) do
+    progress.start_operation("package installation")
+    progress.update_status("Resolving dependencies...")
+    
+    local total_packages = #install_order
+    for i, name in ipairs(install_order) do
         local pkg_manifest = loader.load_manifest(name)
-        print("Installing " .. pkg_manifest.name .. " " .. pkg_manifest.version)
+        progress.update_progress(i, total_packages, "Installing packages")
+        progress.update_status("Installing " .. pkg_manifest.name .. " " .. pkg_manifest.version)
+        
         local build_type = installer.determine_build_type(pkg_manifest, args.build_from)
-        print("Build type: " .. build_type)
         local options = installer.merge_options(pkg_manifest, args.options)
         local build_dir = config.BUILD_PATH .. "/" .. pkg_manifest.name
         local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. pkg_manifest.name
@@ -113,20 +119,28 @@ function installer.install(manifest, args)
         os.execute("mkdir -p " .. build_dir)
         os.execute("rm -rf " .. temp_install_dir)
         os.execute("mkdir -p " .. temp_install_dir)
+        
         local source_spec
         if build_type == "source" then
             source_spec = pkg_manifest.sources.source
+            progress.update_status("Downloading source for " .. pkg_manifest.name)
         else
             source_spec = pkg_manifest.sources.binary
+            progress.update_status("Downloading binary for " .. pkg_manifest.name)
         end
         if source_spec then
             fetcher.fetch(source_spec, build_dir)
         end
+        
+        progress.update_status("Building " .. pkg_manifest.name)
         builder.build(pkg_manifest, build_dir, build_type, options)
+        
+        progress.update_status("Installing " .. pkg_manifest.name)
         installer.copy_from_temp(pkg_manifest)
         installer.record_installation(pkg_manifest)
-        print("Successfully installed " .. pkg_manifest.name)
     end
+    
+    progress.finish_operation(true, "Installation completed successfully")
 end
 
 --- Uninstall a package with custom hook support and thorough cleanup
@@ -139,13 +153,17 @@ end
 -- changes while ensuring no remnants remain after removal.
 -- @param manifest table Package manifest containing uninstall hooks and metadata for proper cleanup
 function installer.uninstall(manifest)
-    print("Uninstalling " .. manifest.name)
+    progress.start_operation("package uninstallation")
+    
     if not resolver.is_installed(manifest.name) then
-        print("Package not installed: " .. manifest.name)
+        progress.finish_operation(false, "Package not installed: " .. manifest.name)
         return
     end
 
+    progress.update_status("Uninstalling " .. manifest.name)
+
     if manifest.uninstall then
+        progress.update_status("Running pre-uninstall hooks")
         local build_dir = config.BUILD_PATH .. "/" .. manifest.name
         local uninstall_fn = manifest.uninstall()
         local hooks = {
@@ -161,14 +179,20 @@ function installer.uninstall(manifest)
 
         uninstall_fn(hook)
         if hooks.pre_uninstall then hooks.pre_uninstall() end
+        
+        progress.update_status("Removing files for " .. manifest.name)
         installer.remove_files(manifest)
+        
+        progress.update_status("Running post-uninstall hooks")
         if hooks.post_uninstall then hooks.post_uninstall() end
     else
+        progress.update_status("Removing files for " .. manifest.name)
         installer.remove_files(manifest)
     end
 
+    progress.update_status("Removing installation record")
     installer.remove_installation_record(manifest)
-    print("Successfully uninstalled " .. manifest.name)
+    progress.finish_operation(true, "Successfully uninstalled " .. manifest.name)
 end
 
 --- Determine optimal build type based on user preference and package availability
