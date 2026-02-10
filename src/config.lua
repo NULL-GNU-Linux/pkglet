@@ -27,18 +27,11 @@ config.MAKE_CONF = config.CONFIG_DIR .. "/make.lua"
 config.PACKAGE_OPTS = config.CONFIG_DIR .. "/package.opts"
 config.PACKAGE_MASK = config.CONFIG_DIR .. "/package.mask"
 config.PACKAGE_LOCK = config.CONFIG_DIR .. "/package.lock"
-config.GPG_HOME = config.CONFIG_DIR .. "/gnupg"
 config.global_options = {}
 config.package_options = {}
 config.masked_packages = {}
 config.pinned_packages = {}
 config.repos = {}
-config.repo_priorities = {}
-config.repo_mirrors = {}
-config.ENABLE_GPG = true
-config.REQUIRE_TRUSTED_KEYS = false
-config.AUTO_IMPORT_KEYS = false
-config.KEY_SERVER = "hkps://keys.openpgp.org"
 
 --- Initialize the entire configuration system and create necessary directories
 --
@@ -77,27 +70,13 @@ end
 function config.load_repos()
     local f = io.open(config.REPOS_CONF, "r")
     if not f then return end
-    local current_section = nil
     
     for line in f:lines() do
         line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
         if line ~= "" then
-            if line:match("^%[.*%]$") then
-                current_section = line:match("^%[(.+)%]$")
-            elseif current_section == "repositories" then
-                local name, path, priority = line:match("^(%S+)%s+(%S+)%s*(%d*)$")
-                if name and path then
-                    config.repos[name] = path
-                    config.repo_priorities[name] = tonumber(priority) or 50
-                end
-            elseif current_section == "mirrors" then
-                local repo, mirrors = line:match("^(%S+)%s+(.+)$")
-                if repo and mirrors then
-                    config.repo_mirrors[repo] = {}
-                    for mirror in mirrors:gmatch("%S+") do
-                        table.insert(config.repo_mirrors[repo], mirror)
-                    end
-                end
+            local name, path = line:match("^(%S+)%s+(%S+)$")
+            if name and path then
+                config.repos[name] = path
             end
         end
     end
@@ -258,79 +237,15 @@ function config.load_pins()
     f:close()
 end
 
---- Get repositories sorted by priority
--- @return table Array of repository names sorted by priority (highest first)
-function config.get_repos_by_priority()
-    local sorted_repos = {}
-    for name, _ in pairs(config.repos) do
-        table.insert(sorted_repos, name)
-    end
-    
-    table.sort(sorted_repos, function(a, b)
-        local priority_a = config.repo_priorities[a] or 50
-        local priority_b = config.repo_priorities[b] or 50
-        if priority_a == priority_b then
-            return a < b
-        else
-            return priority_a > priority_b
-        end
-    end)
-    
-    return sorted_repos
-end
-
---- Get mirrors for a repository
--- @param repo_name string Name of repository
--- @return table Array of mirror URLs
-function config.get_repo_mirrors(repo_name)
-    return config.repo_mirrors[repo_name] or {}
-end
-
---- Try to fetch from repository or its mirrors
--- @param repo_name string Name of repository
--- @param relative_path string Path to fetch relative to repository
--- @param destination string Local destination path
--- @return boolean True if fetch succeeded from any source
-function config.fetch_from_repo_or_mirrors(repo_name, relative_path, destination)
-    local repo_path = config.repos[repo_name]
-    local sources = {repo_path}
-    
-    for _, mirror in ipairs(config.get_repo_mirrors(repo_name)) do
-        table.insert(sources, mirror)
-    end
-    
-    for _, source in ipairs(sources) do
-        local source_path = source .. "/" .. relative_path
-        local cmd = "cp " .. source_path .. " " .. destination .. " 2>/dev/null"
-        local ok, _, code = os.execute(cmd)
-        
-        if ok and code == 0 then
-            return true
-        end
-        
-        if source:match("^https?://") then
-            cmd = "wget -O " .. destination .. " " .. source_path
-            ok, _, code = os.execute(cmd)
-            if ok and code == 0 then
-                return true
-            end
-        end
-    end
-    
-    return false
-end
-
 --- Add a new repository
 -- @param name string Repository name
 -- @param path string Repository path
--- @param priority number Repository priority (optional, defaults to 50)
-function config.add_repo(name, path, priority)
+function config.add_repo(name, path)
     config.repos[name] = path
-    config.repo_priorities[name] = priority or 50
     
     local f = io.open(config.REPOS_CONF, "a")
     if f then
-        f:write(name .. " " .. path .. " " .. (priority or 50) .. "\n")
+        f:write(name .. " " .. path .. "\n")
         f:close()
     end
 end
@@ -339,8 +254,6 @@ end
 -- @param name string Repository name to remove
 function config.remove_repo(name)
     config.repos[name] = nil
-    config.repo_priorities[name] = nil
-    config.repo_mirrors[name] = nil
     
     local lines = {}
     local f = io.open(config.REPOS_CONF, "r")

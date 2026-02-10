@@ -43,14 +43,9 @@ Default installation:
 Edit `/etc/pkglet/repos.conf`:
 
 ```
-[repositories]
-main /var/db/pkglet/repos/main 100
-overlay /var/db/pkglet/repos/overlay 50
-testing /var/db/pkglet/repos/testing 10
-
-[mirrors]
-main https://mirror1.example.com/repos/main https://mirror2.example.com/repos/main
-overlay https://mirror1.example.com/repos/overlay
+main /var/db/pkglet/repos/main
+overlay /var/db/pkglet/repos/overlay
+testing /var/db/pkglet/repos/testing
 ```
 
 ### Build Options
@@ -156,18 +151,7 @@ pkglet i org.kernel.linux --force
 pkglet install org.kernel.linux --force
 ```
 
-### GPG Operations
 
-```bash
-pkglet G list-keys                          # List all keys
-pkglet G import-key /path/to/key.pub          # Import key from file
-pkglet G import-key-server KEYID               # Import key from server
-pkglet G generate-key "Name" email@example.com  # Generate new key pair
-pkglet G export-key KEYID [output-file]       # Export public key
-pkglet G sign-package package.tar.gz [key-id]   # Sign package file
-pkglet G verify-package package.tar.gz.asc [sig-file] # Verify signature
-pkglet G delete-key KEYID                      # Delete key
-```
 
 ### Search Packages
 
