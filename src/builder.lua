@@ -15,6 +15,7 @@
 
 local builder = {}
 local config = require("src.config")
+local progress = require("src.progress")
 
 --- Execute the complete build process for a package
 --
@@ -93,18 +94,23 @@ function builder.build(manifest, build_dir, build_type, options)
 	local old_dir = os.getenv("PWD") or "."
 	os.execute("cd " .. build_dir)
 	if hooks.prepare then
+		progress.update_status("Running preparation phase")
 		hooks.prepare()
 	end
 	if hooks.build then
+		progress.update_status("Running build phase")
 		hooks.build()
 	end
 	if hooks.pre_install then
+		progress.update_status("Running pre-install phase")
 		hooks.pre_install()
 	end
 	if hooks.install then
+		progress.update_status("Running install phase")
 		hooks.install()
 	end
 	if hooks.post_install then
+		progress.update_status("Running post-install phase")
 		hooks.post_install()
 	end
 	os.execute("cd " .. old_dir)
@@ -153,9 +159,10 @@ function builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destva
 		end
 	end
 
-	print("-> " .. cmd)
+	progress.update_status(cmd)
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
+		progress.finish_operation(false, "make failed")
 		error("make failed")
 	end
 end
@@ -184,9 +191,10 @@ function builder.cmake_wrapper(build_dir, args)
 			cmd = cmd .. " " .. arg
 		end
 	end
-	print("-> " .. cmd)
+	progress.update_status(cmd)
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
+		progress.finish_operation(false, "cmake failed")
 		error("cmake failed")
 	end
 end
@@ -216,9 +224,10 @@ function builder.configure_wrapper(build_dir, args, name)
 			cmd = cmd .. " " .. arg
 		end
 	end
-	print("-> " .. cmd)
+	progress.update_status(cmd)
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
+		progress.finish_operation(false, "configure failed")
 		error("configure failed")
 	end
 end
@@ -256,9 +265,10 @@ function builder.ninja_wrapper(build_dir, make_opts, args)
 		end
 	end
 
-	print("-> " .. cmd)
+	progress.update_status(cmd)
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
+		progress.finish_operation(false, "ninja failed")
 		error("ninja failed")
 	end
 end
@@ -292,9 +302,10 @@ function builder.install_wrapper(build_dir, args)
 		end
 	end
 
-	print("-> " .. cmd)
+	progress.update_status(cmd)
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
+		progress.finish_operation(false, "install failed")
 		error("install failed")
 	end
 end
@@ -316,9 +327,10 @@ function builder.meson_wrapper(build_dir, args)
 			cmd = cmd .. " " .. arg
 		end
 	end
-	print("-> " .. cmd)
+	progress.update_status(cmd)
 	local ok, _, code = os.execute(cmd)
 	if not ok or code ~= 0 then
+		progress.finish_operation(false, "meson failed")
 		error("meson failed")
 	end
 end
