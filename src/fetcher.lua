@@ -52,7 +52,7 @@ function fetcher.fetch_tar(spec, build_dir)
 	local distfile = config.DISTFILES_PATH .. "/" .. filename
 	if not fetcher.file_exists(distfile) then
 		print("Fetching " .. filename .. "...")
-		
+
 		local success = false
 		if spec.url:match("^https?://") then
 			local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
@@ -65,7 +65,7 @@ function fetcher.fetch_tar(spec, build_dir)
 				success = true
 			end
 		end
-		
+
 		if not success then
 			error("failed to download: " .. spec.url)
 		end
@@ -101,11 +101,6 @@ function fetcher.fetch_tar(spec, build_dir)
 	if not ok or code ~= 0 then
 		error("failed to extract: " .. filename)
 	end
-
-	if spec.patches then
-		fetcher.apply_patches(spec.patches, build_dir)
-	end
-
 	return build_dir
 end
 
@@ -121,11 +116,6 @@ function fetcher.fetch_git(spec, build_dir)
 	if not ok or code ~= 0 then
 		error("failed to clone: " .. spec.url)
 	end
-
-	if spec.patches then
-		fetcher.apply_patches(spec.patches, build_dir)
-	end
-
 	return build_dir
 end
 
@@ -134,7 +124,7 @@ function fetcher.fetch_file(spec, build_dir)
 	local distfile = config.DISTFILES_PATH .. "/" .. (spec.name or spec.url:match("([^/]+)$"))
 	if not fetcher.file_exists(distfile) then
 		print("Fetching " .. filename .. "...")
-		
+
 		local success = false
 		if spec.url:match("^https?://") then
 			local ok, _, code = os.execute("wget -O " .. distfile .. " " .. spec.url)
@@ -147,7 +137,7 @@ function fetcher.fetch_file(spec, build_dir)
 				success = true
 			end
 		end
-		
+
 		if not success then
 			error("failed to download: " .. spec.url)
 		end
