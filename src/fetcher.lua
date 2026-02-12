@@ -5,15 +5,46 @@ local fetcher = {}
 local config = require("src.config")
 
 function fetcher.fetch(source_spec, build_dir)
-	if source_spec.type == "tar" then
-		return fetcher.fetch_tar(source_spec, build_dir)
-	elseif source_spec.type == "git" then
-		return fetcher.fetch_git(source_spec, build_dir)
-	elseif source_spec.type == "file" then
-		return fetcher.fetch_file(source_spec, build_dir)
+	if type(source_spec) == "table" then
+		if source_spec[1] then
+			return fetcher.fetch_all(source_spec, build_dir)
+		else
+			return fetcher.fetch_single(source_spec, build_dir)
+		end
 	else
-		error("unsupported source type: " .. tostring(source_spec.type))
+		error("invalid source specification")
 	end
+end
+
+function fetcher.fetch_single(spec, build_dir)
+	if spec.type == "tar" then
+		return fetcher.fetch_tar(spec, build_dir)
+	elseif spec.type == "git" then
+		return fetcher.fetch_git(spec, build_dir)
+	elseif spec.type == "file" then
+		return fetcher.fetch_file(spec, build_dir)
+	else
+		error("unsupported source type: " .. tostring(spec.type))
+	end
+end
+
+function fetcher.fetch_all(sources, build_dir)
+	os.execute("mkdir -p " .. build_dir)
+	for _, spec in ipairs(sources) do
+		if spec.type == "tar" then
+			fetcher.fetch_tar(spec, build_dir)
+		elseif spec.type == "file" then
+			fetcher.fetch_file(spec, build_dir)
+		else
+			error("unsupported source type in multi-source: " .. tostring(spec.type))
+		end
+	end
+	for _, spec in ipairs(sources) do
+		if spec.patches then
+			fetcher.apply_patches(spec.patches, build_dir)
+		end
+	end
+	return build_dir
 end
 
 function fetcher.fetch_tar(spec, build_dir)
@@ -99,8 +130,8 @@ function fetcher.fetch_git(spec, build_dir)
 end
 
 function fetcher.fetch_file(spec, build_dir)
-	local filename = spec.url:match("([^/]+)$")
-	local distfile = config.DISTFILES_PATH .. "/" .. filename
+	local filename = spec.name or spec.url:match("([^/]+)$")
+	local distfile = config.DISTFILES_PATH .. "/" .. (spec.name or spec.url:match("([^/]+)$"))
 	if not fetcher.file_exists(distfile) then
 		print("Fetching " .. filename .. "...")
 		
@@ -135,7 +166,7 @@ function fetcher.fetch_file(spec, build_dir)
 	end
 
 	os.execute("mkdir -p " .. build_dir)
-	os.execute("cp " .. distfile .. " " .. build_dir .. "/")
+	os.execute("cp " .. distfile .. " " .. build_dir .. "/" .. filename)
 	return build_dir
 end
 
@@ -151,7 +182,7 @@ function fetcher.apply_patches(patches, build_dir)
 end
 
 function fetcher.fetch_patch(patch_spec, build_dir)
-	local filename = patch_spec.url:match("([^/]+)$")
+	local filename = patch_spec.name or patch_spec.url:match("([^/]+)$")
 	local patchfile = config.DISTFILES_PATH .. "/" .. filename
 	if not fetcher.file_exists(patchfile) then
 		print("Fetching patch: " .. filename .. "...")
