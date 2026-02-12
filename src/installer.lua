@@ -122,8 +122,8 @@ function installer.install(manifest, args)
             fetcher.fetch(source_spec, build_dir)
         end
         builder.build(pkg_manifest, build_dir, build_type, options)
-        installer.copy_from_temp(pkg_manifest)
-        installer.record_installation(pkg_manifest)
+        local files_list = installer.copy_from_temp(pkg_manifest)
+        installer.record_installation(pkg_manifest, files_list)
         print("Successfully installed " .. pkg_manifest.name)
     end
 end
@@ -234,15 +234,7 @@ function installer.merge_options(manifest, cli_options)
     return options
 end
 
---- Record package installation metadata in the package database
--- This function creates a persistent record of package installations for tracking,
--- dependency management, and system maintenance. It stores essential metadata
--- including package name, version, and installation timestamp in a simple key-value
--- format that can be easily queried by other system components. The database
--- records are critical for determining installed status, managing updates, and
--- providing audit trails for system administration and security compliance.
--- @param manifest table Package manifest containing name, version, and other metadata to be recorded
-function installer.record_installation(manifest)
+function installer.record_installation(manifest, files_list)
     local db_file = config.DB_PATH .. "/" .. manifest.name:gsub("%.", "-")
     local f = io.open(db_file, "w")
     if f then
@@ -250,6 +242,11 @@ function installer.record_installation(manifest)
         f:write("version=" .. manifest.version .. "\n")
         f:write("installed=" .. os.time() .. "\n")
         f:write("manifest_path=" .. manifest._path .. "\n")
+        if files_list then
+            for _, file in ipairs(files_list) do
+                f:write("file=" .. file .. "\n")
+            end
+        end
         f:close()
     end
 end
@@ -282,6 +279,16 @@ function installer.copy_from_temp(manifest)
     local dest_path = config.ROOT
     print("Copying files from temporary location...")
     os.execute("cp -r " .. temp_path .. "/* " .. dest_path .. "/")
+    
+    local files_list = {}
+    local handle = io.popen("cd " .. temp_path .. " && find . -type f -o -type l")
+    if handle then
+        for line in handle:lines() do
+            table.insert(files_list, line)
+        end
+        handle:close()
+    end
+    return files_list
 end
 
 function installer.get_dependencies(manifest)
@@ -394,8 +401,30 @@ end
 
 function installer.remove_files(manifest)
     print("Removing files...")
+    local db_file = config.DB_PATH .. "/" .. manifest.name:gsub("%.", "-")
+    local f = io.open(db_file, "r")
+    local files = {}
+    if f then
+        for line in f:lines() do
+            local key, value = line:match("^([^=]+)=(.+)$")
+            if key == "file" then
+                table.insert(files, value)
+            end
+        end
+        f:close()
+    end
+    
+    for _, file in ipairs(files) do
+        local full_path = config.ROOT .. "/" .. file
+        os.execute("rm -f " .. full_path)
+    end
+    
     local temp_path = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
     os.execute("rm -rf " .. temp_path)
+    
+    if #files > 0 then
+        print("Removed " .. #files .. " files")
+    end
 end
 
 function installer.run_single_hook(manifest, args)
@@ -457,9 +486,11 @@ function installer.run_single_hook(manifest, args)
     elseif hook_name == "install" and hooks.install then
         print("Running install hook...")
         hooks.install()
-        installer.copy_from_temp(manifest)
+        local files_list = installer.copy_from_temp(manifest)
+        installer.record_installation(manifest, files_list)
     elseif hook_name == "post_install" and hooks.post_install then
-        installer.copy_from_temp(manifest)
+        local files_list = installer.copy_from_temp(manifest)
+        installer.record_installation(manifest, files_list)
         print("Running post_install hook...")
         hooks.post_install()
     else

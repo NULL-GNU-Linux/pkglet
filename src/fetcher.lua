@@ -4,15 +4,6 @@
 local fetcher = {}
 local config = require("src.config")
 
---- Fetch source based on specification from remote repositories
--- This function serves as the main entry point for source acquisition in the pkglet system.
--- It dispatches to appropriate fetch handlers based on the source type, supporting tar archives,
--- git repositories, and individual files. The function ensures that sources are downloaded
--- to a centralized cache and extracted to the specified build directory for subsequent
--- compilation and installation steps.
--- @param source_spec table Source specification containing type, url, and optional metadata like checksums, commits, or tags
--- @param build_dir string Target build directory path where sources will be extracted and prepared for compilation
--- @return string The build directory path where sources were successfully extracted
 function fetcher.fetch(source_spec, build_dir)
 	if source_spec.type == "tar" then
 		return fetcher.fetch_tar(source_spec, build_dir)
@@ -25,16 +16,6 @@ function fetcher.fetch(source_spec, build_dir)
 	end
 end
 
---- Fetch and extract tar archive from remote URL with intelligent format detection
--- This function handles downloading and extracting compressed archives in various formats
--- including tar.gz, tar.bz2, tar.xz, and zip files. It implements caching to avoid
--- re-downloading the same archive and automatically detects the compression format
--- based on file extension. The extraction process strips the top-level directory
--- to ensure a clean build structure, which is essential for consistent compilation
--- across different upstream archive layouts.
--- @param spec table Archive specification containing url and optional checksum for verification
--- @param build_dir string Target directory where archive contents will be extracted for building
--- @return string The build directory path containing the extracted archive contents
 function fetcher.fetch_tar(spec, build_dir)
 	local filename = spec.url:match("([^/]+)$")
 	local distfile = config.DISTFILES_PATH .. "/" .. filename
@@ -58,6 +39,19 @@ function fetcher.fetch_tar(spec, build_dir)
 			error("failed to download: " .. spec.url)
 		end
 	end
+
+	if spec.sha256sum then
+		local ok = fetcher.verify_sha256(distfile, spec.sha256sum)
+		if not ok then
+			error("sha256sum mismatch for " .. filename)
+		end
+	elseif spec.md5sum then
+		local ok = fetcher.verify_md5(distfile, spec.md5sum)
+		if not ok then
+			error("md5sum mismatch for " .. filename)
+		end
+	end
+
 	os.execute("mkdir -p " .. build_dir)
 	print("Extracting " .. filename .. "...")
 	local extract_cmd
@@ -76,19 +70,14 @@ function fetcher.fetch_tar(spec, build_dir)
 	if not ok or code ~= 0 then
 		error("failed to extract: " .. filename)
 	end
+
+	if spec.patches then
+		fetcher.apply_patches(spec.patches, build_dir)
+	end
+
 	return build_dir
 end
 
---- Clone git repository with support for specific commits, tags, or branches
--- This function handles cloning git repositories from remote URLs, providing flexibility
--- to checkout specific commits, tags, or branches for reproducible builds. It creates
--- a clean clone in the specified build directory and automatically switches to the
--- requested revision if specified. This ensures that package builds use exactly the
--- intended source code version, which is critical for security and reproducibility
--- in package management systems.
--- @param spec table Git repository specification containing url, optional commit hash, or tag name
--- @param build_dir string Target directory where the git repository will be cloned for building
--- @return string The build directory path containing the cloned git repository
 function fetcher.fetch_git(spec, build_dir)
 	print("Cloning " .. spec.url .. "...")
 	local clone_cmd = "git clone " .. spec.url .. " " .. build_dir
@@ -101,19 +90,14 @@ function fetcher.fetch_git(spec, build_dir)
 	if not ok or code ~= 0 then
 		error("failed to clone: " .. spec.url)
 	end
+
+	if spec.patches then
+		fetcher.apply_patches(spec.patches, build_dir)
+	end
+
 	return build_dir
 end
 
---- Download individual file from remote URL with caching support
--- This function handles downloading single files from remote locations, implementing
--- the same caching mechanism as archives to avoid redundant downloads. It's particularly
--- useful for packages that consist of single files or patches that need to be applied
--- during the build process. The downloaded file is copied to the build directory,
--- maintaining the original filename while ensuring it's available for subsequent
--- build steps without requiring network access during the actual compilation.
--- @param spec table File specification containing the remote URL to download
--- @param build_dir string Target directory where the downloaded file will be copied for building
--- @return string The build directory path containing the downloaded file
 function fetcher.fetch_file(spec, build_dir)
 	local filename = spec.url:match("([^/]+)$")
 	local distfile = config.DISTFILES_PATH .. "/" .. filename
@@ -137,20 +121,87 @@ function fetcher.fetch_file(spec, build_dir)
 			error("failed to download: " .. spec.url)
 		end
 	end
+
+	if spec.sha256sum then
+		local ok = fetcher.verify_sha256(distfile, spec.sha256sum)
+		if not ok then
+			error("sha256sum mismatch for " .. filename)
+		end
+	elseif spec.md5sum then
+		local ok = fetcher.verify_md5(distfile, spec.md5sum)
+		if not ok then
+			error("md5sum mismatch for " .. filename)
+		end
+	end
+
 	os.execute("mkdir -p " .. build_dir)
 	os.execute("cp " .. distfile .. " " .. build_dir .. "/")
 	return build_dir
 end
 
---- Check if file exists at the specified path using safe file operations
--- This utility function provides a reliable method to test file existence without
--- generating errors or exceptions. It attempts to open the file in read mode and
--- immediately closes it, which is a cross-platform compatible approach to check
--- both file existence and readability. This function is used throughout the
--- fetching system to determine whether cached files need to be downloaded or
--- if they can be reused from previous operations.
--- @param path string Absolute or relative file path to check for existence
--- @return boolean True if the file exists and is readable, false otherwise
+function fetcher.apply_patches(patches, build_dir)
+	for _, patch in ipairs(patches) do
+		local patch_file = fetcher.fetch_patch(patch, build_dir)
+		print("Applying patch: " .. patch_file)
+		local ok, _, code = os.execute("cd " .. build_dir .. " && patch -p0 < " .. patch_file)
+		if not ok or code ~= 0 then
+			error("failed to apply patch: " .. patch.url)
+		end
+	end
+end
+
+function fetcher.fetch_patch(patch_spec, build_dir)
+	local filename = patch_spec.url:match("([^/]+)$")
+	local patchfile = config.DISTFILES_PATH .. "/" .. filename
+	if not fetcher.file_exists(patchfile) then
+		print("Fetching patch: " .. filename .. "...")
+		local success = false
+		if patch_spec.url:match("^https?://") then
+			local ok, _, code = os.execute("wget -O " .. patchfile .. " " .. patch_spec.url)
+			if ok and code == 0 then
+				success = true
+			end
+		else
+			local ok, _, code = os.execute("cp " .. patch_spec.url .. " " .. patchfile)
+			if ok and code == 0 then
+				success = true
+			end
+		end
+		if not success then
+			error("failed to download patch: " .. patch_spec.url)
+		end
+	end
+
+	if patch_spec.sha256sum then
+		local ok = fetcher.verify_sha256(patchfile, patch_spec.sha256sum)
+		if not ok then
+			error("sha256sum mismatch for patch: " .. filename)
+		end
+	elseif patch_spec.md5sum then
+		local ok = fetcher.verify_md5(patchfile, patch_spec.md5sum)
+		if not ok then
+			error("md5sum mismatch for patch: " .. filename)
+		end
+	end
+
+	return patchfile
+end
+
+function fetcher.verify_sha256(file, expected)
+	local handle = io.popen("sha256sum " .. file)
+	local result = handle:read("*a")
+	handle:close()
+	local actual = result:match("^([a-f0-9]+)")
+	return actual == expected
+end
+
+function fetcher.verify_md5(file, expected)
+	local handle = io.popen("md5sum " .. file)
+	local result = handle:read("*a")
+	handle:close()
+	local actual = result:match("^([a-f0-9]+)")
+	return actual == expected
+end
 function fetcher.file_exists(path)
 	local f = io.open(path, "r")
 	if f then
