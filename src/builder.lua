@@ -61,6 +61,51 @@ function builder.build(manifest, build_dir, build_type, options)
 	env.meson = function(args)
 		return builder.meson_wrapper(build_dir, args)
 	end
+	env.cargo = function(args)
+		return builder.cargo_wrapper(build_dir, make_opts, args)
+	end
+	env.go = function(args)
+		return builder.go_wrapper(build_dir, args)
+	end
+	env.npm = function(args)
+		return builder.npm_wrapper(build_dir, args)
+	end
+	env.mvn = function(args)
+		return builder.mvn_wrapper(build_dir, args)
+	end
+	env.gradle = function(args)
+		return builder.gradle_wrapper(build_dir, args)
+	end
+	env.scons = function(args)
+		return builder.scons_wrapper(build_dir, make_opts, args)
+	end
+	env.bazel = function(args)
+		return builder.bazel_wrapper(build_dir, args)
+	end
+	env.patch = function(patch_file, args)
+		return builder.patch_wrapper(build_dir, patch_file, args)
+	end
+	env.git = function(args)
+		return builder.git_wrapper(build_dir, args)
+	end
+	env.wget = function(url, dest, args)
+		return builder.wget_wrapper(url, dest, args)
+	end
+	env.curl = function(url, dest, args)
+		return builder.curl_wrapper(url, dest, args)
+	end
+	env.tar = function(archive, dest, args)
+		return builder.tar_wrapper(archive, dest, args)
+	end
+	env.unzip = function(archive, dest, args)
+		return builder.unzip_wrapper(archive, dest, args)
+	end
+	env.python = function(args)
+		return builder.python_wrapper(build_dir, args)
+	end
+	env.setuid = function(file, owner, mode)
+		return builder.setuid_wrapper(file, owner, mode)
+	end
 	env.exec = os.execute
 	env.ROOT = config.ROOT
 	env.CONFIG = config
