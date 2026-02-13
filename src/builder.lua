@@ -89,22 +89,22 @@ function builder.build(manifest, build_dir, build_type, options)
 		return builder.git_wrapper(build_dir, args)
 	end
 	env.wget = function(url, dest, args)
-		return builder.wget_wrapper(url, dest, args)
+		return builder.wget_wrapper(build_dir,url, dest, args)
 	end
 	env.curl = function(url, dest, args)
-		return builder.curl_wrapper(url, dest, args)
+		return builder.curl_wrapper(build_dir,url, dest, args)
 	end
 	env.tar = function(archive, dest, args)
-		return builder.tar_wrapper(archive, dest, args)
+		return builder.tar_wrapper(build_dir,archive, dest, args)
 	end
 	env.unzip = function(archive, dest, args)
-		return builder.unzip_wrapper(archive, dest, args)
+		return builder.unzip_wrapper(build_dir,archive, dest, args)
 	end
 	env.python = function(args)
-		return builder.python_wrapper(build_dir, args)
+		return builder.python_wrapper(build_dir,build_dir, args)
 	end
 	env.setuid = function(file, owner, mode)
-		return builder.setuid_wrapper(file, owner, mode)
+		return builder.setuid_wrapper(build_dir,file, owner, mode)
 	end
 	env.exec = os.execute
 	env.ROOT = config.ROOT
@@ -551,8 +551,8 @@ end
 -- @param url string Git repository URL to clone
 -- @param dest string Destination directory for the cloned repository
 -- @param args table Optional array of git arguments such as "--depth", "--branch"
-function builder.git_clone_wrapper(url, dest, args)
-	local cmd = "git clone"
+function builder.git_clone_wrapper(build_dir,url, dest, args)
+	local cmd = "cd " .. build_dir .. " && git clone"
 	if args then
 		for _, arg in ipairs(args) do
 			cmd = cmd .. " " .. arg
@@ -593,8 +593,8 @@ end
 -- @param url string URL to download
 -- @param dest string Destination file path (optional)
 -- @param args table Optional array of wget arguments such as "-q", "-O", "--no-check-certificate"
-function builder.wget_wrapper(url, dest, args)
-	local cmd = "wget"
+function builder.wget_wrapper(build_dir,url, dest, args)
+	local cmd = "cd " .. build_dir .. " && wget"
 	if args then
 		for _, arg in ipairs(args) do
 			cmd = cmd .. " " .. arg
@@ -618,8 +618,8 @@ end
 -- @param url string URL to download
 -- @param dest string Destination file path (optional)
 -- @param args table Optional array of curl arguments such as "-fsSL", "-o"
-function builder.curl_wrapper(url, dest, args)
-	local cmd = "curl"
+function builder.curl_wrapper(build_dir,url, dest, args)
+	local cmd = "cd " .. build_dir .. " && curl"
 	if args then
 		for _, arg in ipairs(args) do
 			cmd = cmd .. " " .. arg
@@ -645,8 +645,8 @@ end
 -- @param archive string Path to the archive file
 -- @param dest string Destination directory for extraction (optional)
 -- @param args table Optional array of tar arguments
-function builder.tar_wrapper(archive, dest, args)
-	local cmd = "tar"
+function builder.tar_wrapper(build_dir,archive, dest, args)
+	local cmd = "cd " .. build_dir .. " && tar"
 	if args then
 		for _, arg in ipairs(args) do
 			cmd = cmd .. " " .. arg
@@ -672,8 +672,8 @@ end
 -- @param archive string Path to the zip file
 -- @param dest string Destination directory for extraction (optional)
 -- @param args table Optional array of unzip arguments such as "-q" for quiet
-function builder.unzip_wrapper(archive, dest, args)
-	local cmd = "unzip"
+function builder.unzip_wrapper(build_dir,archive, dest, args)
+	local cmd = "cd " .. build_dir .. " && unzip"
 	if args then
 		for _, arg in ipairs(args) do
 			cmd = cmd .. " " .. arg
@@ -720,10 +720,10 @@ end
 -- @param file string Path to the file or directory
 -- @param owner string Owner in "user:group" format (optional, nil for chmod only)
 -- @param mode string Permission mode (e.g., "4755" for setuid+rwx)
-function builder.setuid_wrapper(file, owner, mode)
+function builder.setuid_wrapper(build_dir,file, owner, mode)
 	local cmd
 	if owner then
-		cmd = "chown " .. owner .. " " .. file
+		cmd = "cd " .. build_dir .. " && chown " .. owner .. " " .. file
 		print("\27[7m-> " .. cmd .. "\27[0m")
 		local ok, _, code = os.execute(cmd)
 		if not ok or code ~= 0 then
@@ -731,7 +731,7 @@ function builder.setuid_wrapper(file, owner, mode)
 		end
 	end
 	if mode then
-		cmd = "chmod " .. mode .. " " .. file
+		cmd = "cd " .. build_dir .. " && chmod " .. mode .. " " .. file
 		print("\27[7m-> " .. cmd .. "\27[0m")
 		local ok, _, code = os.execute(cmd)
 		if not ok or code ~= 0 then
