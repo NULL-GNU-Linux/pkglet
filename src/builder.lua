@@ -322,5 +322,377 @@ print("\27[7m-> " .. cmd .. "\27[0m")
 		error("meson failed")
 	end
 end
+--- Execute Cargo build commands for Rust projects
+--
+-- This function provides a wrapper for Cargo, Rust's package manager and build tool.
+-- It supports building, testing, and installing Rust crates with parallel compilation.
+--
+-- @param build_dir string Absolute path to the Cargo project directory
+-- @param make_opts table Configuration for parallel execution including jobs limit
+-- @param args table Optional array of Cargo arguments such as "build", "test", "install", "--release"
+function builder.cargo_wrapper(build_dir, make_opts, args)
+	local cmd = "cd " .. build_dir .. " && cargo"
+	if make_opts.jobs then
+		cmd = cmd .. " -j" .. make_opts.jobs
+	end
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("cargo failed")
+	end
+end
+
+--- Execute Go build commands
+--
+-- This function provides a wrapper for the Go programming language build tool.
+-- It supports building Go packages and installing binaries.
+--
+-- @param build_dir string Absolute path to the Go project directory
+-- @param args table Optional array of go arguments such as "build", "install", "-o", tags
+function builder.go_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && go"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("go failed")
+	end
+end
+
+--- Execute npm commands for Node.js packages
+--
+-- This function provides a wrapper for npm, Node.js package manager.
+-- It supports installing dependencies, running scripts, and building Node.js projects.
+--
+-- @param build_dir string Absolute path to the Node.js project directory
+-- @param args table Optional array of npm arguments such as "install", "run build", "--production"
+function builder.npm_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && npm"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("npm failed")
+	end
+end
+
+--- Execute Maven build commands for Java projects
+--
+-- This function provides a wrapper for Maven, a build automation tool for Java projects.
+-- It supports compiling, testing, and packaging Java applications.
+--
+-- @param build_dir string Absolute path to the Maven project directory
+-- @param args table Optional array of mvn arguments such as "compile", "package", "-DskipTests"
+function builder.mvn_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && mvn"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("mvn failed")
+	end
+end
+
+--- Execute Gradle build commands for Java/Android projects
+--
+-- This function provides a wrapper for Gradle, a build automation tool
+-- used for Java, Android, and other JVM-based projects.
+--
+-- @param build_dir string Absolute path to the Gradle project directory
+-- @param args table Optional array of gradle arguments such as "build", "assemble", "test"
+function builder.gradle_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && gradle"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("gradle failed")
+	end
+end
+
+--- Execute SCons build commands
+--
+-- This function provides a wrapper for SCons, a Python-based build tool.
+-- It supports building software projects using SConstruct files.
+--
+-- @param build_dir string Absolute path to the SCons project directory
+-- @param args table Optional array of scons arguments such as "-j" for parallel, "install"
+function builder.scons_wrapper(build_dir, make_opts, args)
+	local cmd = "cd " .. build_dir .. " && scons"
+	if make_opts and make_opts.jobs then
+		cmd = cmd .. " -j" .. make_opts.jobs
+	end
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("scons failed")
+	end
+end
+
+--- Execute Bazel build commands
+--
+-- This function provides a wrapper for Bazel, a build and test tool
+-- developed by Google. It supports building and testing a wide variety of languages.
+--
+-- @param build_dir string Absolute path to the Bazel project directory
+-- @param args table Optional array of bazel arguments such as "build", "test", "//target"
+function builder.bazel_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && bazel"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("bazel failed")
+	end
+end
+
+--- Apply patches to source files
+--
+-- This function provides a wrapper for the patch command, enabling
+-- application of diff/patch files to source code.
+--
+-- @param build_dir string Absolute path to the directory where patch should be applied
+-- @param patch_file string Path to the patch file
+-- @param args table Optional array of patch arguments such as "-p1", "-i"
+function builder.patch_wrapper(build_dir, patch_file, args)
+	local cmd = "cd " .. build_dir .. " && patch"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+	cmd = cmd .. " -i " .. patch_file
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("patch failed")
+	end
+end
+
+--- Clone git repositories
+--
+-- This function provides a wrapper for git clone, enabling repository cloning.
+--
+-- @param url string Git repository URL to clone
+-- @param dest string Destination directory for the cloned repository
+-- @param args table Optional array of git arguments such as "--depth", "--branch"
+function builder.git_clone_wrapper(url, dest, args)
+	local cmd = "git clone"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+	cmd = cmd .. " " .. url .. " " .. dest
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("git clone failed")
+	end
+end
+
+--- Execute arbitrary git commands
+--
+-- This function provides a wrapper for git operations like checkout, pull, etc.
+--
+-- @param build_dir string Absolute path to the git repository directory
+-- @param args table Array of git arguments such as "checkout", "pull", "submodule", "update"
+function builder.git_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && git"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("git failed")
+	end
+end
+
+--- Download files using wget
+--
+-- This function provides a wrapper for wget, enabling file downloads.
+--
+-- @param url string URL to download
+-- @param dest string Destination file path (optional)
+-- @param args table Optional array of wget arguments such as "-q", "-O", "--no-check-certificate"
+function builder.wget_wrapper(url, dest, args)
+	local cmd = "wget"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+	cmd = cmd .. " " .. url
+	if dest then
+		cmd = cmd .. " -O " .. dest
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("wget failed")
+	end
+end
+
+--- Download files using curl
+--
+-- This function provides a wrapper for curl, enabling file downloads and HTTP requests.
+--
+-- @param url string URL to download
+-- @param dest string Destination file path (optional)
+-- @param args table Optional array of curl arguments such as "-fsSL", "-o"
+function builder.curl_wrapper(url, dest, args)
+	local cmd = "curl"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+	if dest then
+		cmd = cmd .. " -o " .. dest
+	else
+		cmd = cmd .. " -fsSL"
+	end
+	cmd = cmd .. " " .. url
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("curl failed")
+	end
+end
+
+--- Extract tar archives
+--
+-- This function provides a wrapper for tar, enabling extraction of tar, tar.gz, tar.bz2, tar.xz archives.
+--
+-- @param archive string Path to the archive file
+-- @param dest string Destination directory for extraction (optional)
+-- @param args table Optional array of tar arguments
+function builder.tar_wrapper(archive, dest, args)
+	local cmd = "tar"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	else
+		cmd = cmd .. " -xf"
+	end
+	cmd = cmd .. " " .. archive
+	if dest then
+		cmd = cmd .. " -C " .. dest
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("tar failed")
+	end
+end
+
+--- Extract zip archives
+--
+-- This function provides a wrapper for unzip, enabling extraction of zip archives.
+--
+-- @param archive string Path to the zip file
+-- @param dest string Destination directory for extraction (optional)
+-- @param args table Optional array of unzip arguments such as "-q" for quiet
+function builder.unzip_wrapper(archive, dest, args)
+	local cmd = "unzip"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	else
+		cmd = cmd .. " -q"
+	end
+	cmd = cmd .. " " .. archive
+	if dest then
+		cmd = cmd .. " -d " .. dest
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("unzip failed")
+	end
+end
+
+--- Run Python scripts or modules
+--
+-- This function provides a wrapper for running Python scripts and modules.
+--
+-- @param build_dir string Absolute path where python should be executed
+-- @param args table Array of Python arguments such as "setup.py", "build", "install"
+function builder.python_wrapper(build_dir, args)
+	local cmd = "cd " .. build_dir .. " && python"
+	if args then
+		for _, arg in ipairs(args) do
+			cmd = cmd .. " " .. arg
+		end
+	end
+print("\27[7m-> " .. cmd .. "\27[0m")
+	local ok, _, code = os.execute(cmd)
+	if not ok or code ~= 0 then
+		error("python failed")
+	end
+end
+
+--- Set file ownership and permissions (setuid/setgid)
+--
+-- This function provides a wrapper for chown and chmod to set file ownership
+-- and special permissions like setuid/setgid.
+--
+-- @param file string Path to the file or directory
+-- @param owner string Owner in "user:group" format (optional, nil for chmod only)
+-- @param mode string Permission mode (e.g., "4755" for setuid+rwx)
+function builder.setuid_wrapper(file, owner, mode)
+	local cmd
+	if owner then
+		cmd = "chown " .. owner .. " " .. file
+		print("\27[7m-> " .. cmd .. "\27[0m")
+		local ok, _, code = os.execute(cmd)
+		if not ok or code ~= 0 then
+			error("chown failed")
+		end
+	end
+	if mode then
+		cmd = "chmod " .. mode .. " " .. file
+		print("\27[7m-> " .. cmd .. "\27[0m")
+		local ok, _, code = os.execute(cmd)
+		if not ok or code ~= 0 then
+			error("chmod failed")
+		end
+	end
+end
 
 return builder
