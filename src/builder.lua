@@ -43,8 +43,8 @@ function builder.build(manifest, build_dir, build_type, options)
 	local make_opts = config.get_make_opts()
 	local env = manifest._env
 	env.OPTIONS = options or {}
-	env.make = function(extra_args, is_build, destvar)
-		return builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destvar)
+	env.make = function(extra_args, is_build, destvar, prefix)
+		return builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destvar, prefix)
 	end
 	env.cmake = function(args)
 		return builder.cmake_wrapper(build_dir, args)
@@ -176,9 +176,9 @@ end
 -- @param extra_args table Optional array of additional arguments passed directly to make command
 -- @param is_build boolean True for compilation with parallel jobs, false for installation mode
 -- @param destvar string Variable name for destination directory (for `make install`) (default: DESTDIR)
-function builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destvar)
+function builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destvar, prefix)
     destvar = destvar or "DESTDIR"
-	local cmd = "cd " .. build_dir .. " && make"
+	local cmd = "cd " .. build_dir .. " && " .. prefix .. " make"
 	if is_build == nil or is_build == true then
 		if make_opts.jobs then
 			cmd = cmd .. " -j" .. make_opts.jobs
