@@ -4,7 +4,7 @@
 local fetcher = {}
 local config = require("src.config")
 
-function fetcher.fetch(source_spec, build_dir)
+function fetcher.fetch(source_spec, build_dir, options)
 	if type(source_spec) == "table" then
 		if source_spec[1] then
 			return fetcher.fetch_all(source_spec, build_dir)
@@ -16,7 +16,7 @@ function fetcher.fetch(source_spec, build_dir)
 	end
 end
 
-function fetcher.fetch_single(spec, build_dir)
+function fetcher.fetch_single(spec, build_dir, options)
 	if spec.type == "tar" then
 		return fetcher.fetch_tar(spec, build_dir)
 	elseif spec.type == "git" then
@@ -166,7 +166,11 @@ function fetcher.apply_patches(patches, build_dir)
 		print("Applying patch: " .. patch_file)
 		local ok, _, code = os.execute("cd " .. build_dir .. " && patch -p0 < " .. patch_file)
 		if not ok or code ~= 0 then
-			error("failed to apply patch: " .. patch.url)
+			if patch.nofail then
+				print("Warning: failed to apply patch: " .. patch.url)
+			else
+				error("failed to apply patch: " .. patch.url)
+			end
 		end
 	end
 end

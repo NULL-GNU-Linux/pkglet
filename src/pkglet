@@ -30,15 +30,29 @@ local function main()
 
     elseif args.command == "u" or args.command == "uninstall" then
         local manifest = loader.load_manifest(args.package)
+        
+        if not args.noask then
+            io.write("Uninstall " .. args.package .. "? \27[7m[Y/n]\27[0m ")
+            local response = io.read()
+            if response and response:lower():sub(1,1) == 'n' then
+                print("Uninstall cancelled.")
+                return
+            end
+        end
+        
         installer.uninstall(manifest)
         config.unpin_package(args.package)
 
     elseif args.command == "U" or args.command == "upgrade" then
-        installer.upgrade(args.package, args)
+        if not args.package then
+            installer.upgrade_all(args)
+        else
+            installer.upgrade(args.package, args)
 
-        if args.pin then
-            local latest_version = installer.get_installed_version(args.package)
-            config.pin_package(args.package, latest_version)
+            if args.pin then
+                local latest_version = installer.get_installed_version(args.package)
+                config.pin_package(args.package, latest_version)
+            end
         end
 
     elseif args.command == "d" or args.command == "downgrade" then

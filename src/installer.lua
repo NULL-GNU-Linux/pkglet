@@ -567,6 +567,72 @@ function installer.get_installed_version(package_name)
     return version
 end
 
+--- Get all installed packages
+-- @return table List of all installed package names
+function installer.get_all_installed()
+    local packages = {}
+    local handle = io.popen("ls " .. config.DB_PATH .. " 2>/dev/null")
+    if handle then
+        for line in handle:lines() do
+            local name = line:gsub("%-", ".")
+            table.insert(packages, name)
+        end
+        handle:close()
+    end
+    return packages
+end
+
+--- Upgrade all installed packages to their latest versions
+-- @param args table Installation arguments
+function installer.upgrade_all(args)
+    local version_module = require("src.version")
+    local loader = require("src.loader")
+    local resolver = require("src.resolver")
+
+    local installed = installer.get_all_installed()
+    if #installed == 0 then
+        print("No packages installed.")
+        return
+    end
+
+    local packages_to_upgrade = {}
+    for _, package_name in ipairs(installed) do
+        local current_version = installer.get_installed_version(package_name)
+        local latest_version = version_module.get_latest_version(package_name, current_version)
+        if latest_version and latest_version ~= current_version then
+            table.insert(packages_to_upgrade, {name = package_name, current = current_version, latest = latest_version})
+        end
+    end
+
+    if #packages_to_upgrade == 0 then
+        print("All packages are up to date.")
+        return
+    end
+
+    print("Packages to upgrade:")
+    for _, pkg in ipairs(packages_to_upgrade) do
+        print("  " .. pkg.name .. " " .. pkg.current .. " -> " .. pkg.latest)
+    end
+    print("")
+
+    if not args.noask then
+        io.write("Proceed with upgrade? \27[7m[Y/n]\27[0m ")
+        local response = io.read()
+        if response and response:lower():sub(1,1) == 'n' then
+            print("Upgrade cancelled.")
+            return
+        end
+    end
+
+    for _, pkg in ipairs(packages_to_upgrade) do
+        print("Upgrading " .. pkg.name .. " from " .. pkg.current .. " to " .. pkg.latest)
+        local manifest = loader.load_manifest(pkg.name)
+        manifest.version = pkg.latest
+        installer.uninstall(manifest)
+        installer.install(manifest, args)
+    end
+end
+
 --- Upgrade a package to the latest available version
 -- @param package_name string Name of the package to upgrade
 -- @param args table Installation arguments
