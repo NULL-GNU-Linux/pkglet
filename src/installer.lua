@@ -574,8 +574,10 @@ function installer.get_all_installed()
     local handle = io.popen("ls " .. config.DB_PATH .. " 2>/dev/null")
     if handle then
         for line in handle:lines() do
-            local name = line:gsub("%-", ".")
-            table.insert(packages, name)
+            if line and line ~= "" then
+                local name = line:gsub("%-", ".")
+                table.insert(packages, name)
+            end
         end
         handle:close()
     end
