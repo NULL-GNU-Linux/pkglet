@@ -177,6 +177,7 @@ end
 -- @param is_build boolean True for compilation with parallel jobs, false for installation mode
 -- @param destvar string Variable name for destination directory (for `make install`) (default: DESTDIR)
 function builder.make_wrapper(build_dir, make_opts, extra_args, is_build, destvar, prefix)
+    prefix = prefix or ""
     destvar = destvar or "DESTDIR"
 	local cmd = "cd " .. build_dir .. " && " .. prefix .. " make"
 	if is_build == nil or is_build == true then
