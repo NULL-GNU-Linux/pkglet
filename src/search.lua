@@ -37,7 +37,16 @@ function search.query(pattern)
             masked = "\27[1;31m[ Masked ]\27[0m"
         end
         local latest = pkg.version or "unknown"
-        local installed = pkg.installed_version or "\27[31m[ Not Installed ]\27[0m"
+        
+        local resolver = require("src.resolver")
+        local installed = "unknown"
+        if resolver.is_installed(pkg.name) then
+            local installed_version = search.get_installed_version(pkg.name)
+            installed = installed_version or "\27[31m[ Unknown Version ]\27[0m"
+        else
+            installed = "\27[31m[ Not Installed ]\27[0m"
+        end
+        
         local homepage = pkg.homepage or "No homepage"
         local description = pkg.description or "No description"
         local license = pkg.license or "unknown"
@@ -45,10 +54,27 @@ function search.query(pattern)
         print("      Latest version available: " .. latest)
         print("      Latest version installed: " .. installed)
         print("      Homepage:      " .. homepage)
-        print("      Description:   " .. description)
-        print("      License:       " .. license)
+        print("      Description: " .. description)
+        print("      License:     " .. license)
         print()
     end
+end
+
+function search.get_installed_version(package_name)
+    local config = require("src.config")
+    local db_file = config.DB_PATH .. "/" .. package_name:gsub("%.", "-")
+    local f = io.open(db_file, "r")
+    if not f then return nil end
+    local version = nil
+    for line in f:lines() do
+        local key, value = line:match("^([^=]+)=(.+)$")
+        if key == "version" then
+            version = value
+            break
+        end
+    end
+    f:close()
+    return version
 end
 
 --- Scan individual repository for packages matching the search pattern

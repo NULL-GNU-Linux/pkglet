@@ -284,7 +284,10 @@ function installer.copy_from_temp(manifest)
     local handle = io.popen("cd " .. temp_path .. " && find . -type f -o -type l")
     if handle then
         for line in handle:lines() do
-            table.insert(files_list, line)
+            local file_path = line:match("^%.(.+)$")
+            if file_path then
+                table.insert(files_list, file_path)
+            end
         end
         handle:close()
     end
