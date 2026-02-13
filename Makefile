@@ -21,7 +21,7 @@ install:
 	@rm -rf $(LIBDIR)
 	@rm -rf $(BINDIR)/pkglet
 	install -Dm755 src/pkglet $(BINDIR)/pkglet
-	ln -s $(BINDIR)/pkglet $(BINDIR)/]
+	ln -sf $(BINDIR)/pkglet $(BINDIR)/]
 	install -dm755 $(LIBDIR)
 	$(foreach module,$(MODULES),install -Dm644 $(module) $(LIBDIR)/$(module);)
 	install -dm755 $(ETCDIR)
