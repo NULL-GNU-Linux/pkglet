@@ -42,6 +42,7 @@
   <li><strong>builder</strong></li>
   <li><a href="../modules/cli.html">cli</a></li>
   <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/conflict.html">conflict</a></li>
   <li><a href="../modules/example-manifest.html">example-manifest</a></li>
   <li><a href="../modules/fetcher.html">fetcher</a></li>
   <li><a href="../modules/installer.html">installer</a></li>
@@ -49,6 +50,7 @@
   <li><a href="../modules/resolver.html">resolver</a></li>
   <li><a href="../modules/search.html">search</a></li>
   <li><a href="../modules/sync.html">sync</a></li>
+  <li><a href="../modules/version.html">version</a></li>
 </ul>
 
 </div>
@@ -74,12 +76,25 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#bazel_wrapper">bazel_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute Bazel build commands</p>
+
+<p> This function provides a wrapper for Bazel, a build and test tool
+ developed by Google.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#build">build (manifest, build_dir, build_type, options)</a></td>
 	<td class="summary">Execute the complete build process for a package</p>
 
 <p> This function orchestrates the entire package build process, setting up the
  build environment, executing the appropriate build function, and managing
  build hooks.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#cargo_wrapper">cargo_wrapper (build_dir, make_opts, args)</a></td>
+	<td class="summary">Execute Cargo build commands for Rust projects</p>
+
+<p> This function provides a wrapper for Cargo, Rust's package manager and build tool.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#cmake_wrapper">cmake_wrapper (build_dir, args)</a></td>
@@ -96,6 +111,28 @@
 <p> This function provides a wrapper for traditional GNU autotools configure scripts,
  which are commonly used in open-source projects for cross-platform build
  configuration.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#curl_wrapper">curl_wrapper (url, dest, args)</a></td>
+	<td class="summary">Download files using curl</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#git_clone_wrapper">git_clone_wrapper (url, dest, args)</a></td>
+	<td class="summary">Clone git repositories</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#git_wrapper">git_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute arbitrary git commands</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#go_wrapper">go_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute Go build commands</p>
+
+<p> This function provides a wrapper for the Go programming language build tool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#gradle_wrapper">gradle_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute Gradle build commands for Java/Android projects</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#install_wrapper">install_wrapper (build_dir, args)</a></td>
@@ -121,12 +158,54 @@
  designed for fast and user-friendly configuration of projects.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#mvn_wrapper">mvn_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute Maven build commands for Java projects</p>
+
+<p> This function provides a wrapper for Maven, a build automation tool for Java projects.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#ninja_wrapper">ninja_wrapper (build_dir, make_opts, args)</a></td>
 	<td class="summary">Execute Ninja build commands with high-performance parallel compilation</p>
 
 <p> This function provides a wrapper for the Ninja build system, which is designed
  for fast incremental builds and is commonly used by CMake-generated projects
  and other modern build systems.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#npm_wrapper">npm_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute npm commands for Node.js packages</p>
+
+<p> This function provides a wrapper for npm, Node.js package manager.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#patch_wrapper">patch_wrapper (build_dir, patch_file, args)</a></td>
+	<td class="summary">Apply patches to source files</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#python_wrapper">python_wrapper (build_dir, args)</a></td>
+	<td class="summary">Run Python scripts or modules</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#scons_wrapper">scons_wrapper (build_dir, args)</a></td>
+	<td class="summary">Execute SCons build commands</p>
+
+<p> This function provides a wrapper for SCons, a Python-based build tool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setuid_wrapper">setuid_wrapper (file, owner, mode)</a></td>
+	<td class="summary">Set file ownership and permissions (setuid/setgid)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tar_wrapper">tar_wrapper (archive, dest, args)</a></td>
+	<td class="summary">Extract tar archives</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#unzip_wrapper">unzip_wrapper (archive, dest, args)</a></td>
+	<td class="summary">Extract zip archives</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wget_wrapper">wget_wrapper (url, dest, args)</a></td>
+	<td class="summary">Download files using wget</td>
 	</tr>
 </table>
 
@@ -137,6 +216,32 @@
     <h2 class="section-header "><a name="Functions"></a>Functions</h2>
 
     <dl class="function">
+    <dt>
+    <a name = "bazel_wrapper"></a>
+    <strong>bazel_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute Bazel build commands</p>
+
+<p> This function provides a wrapper for Bazel, a build and test tool
+ developed by Google.  It supports building and testing a wide variety of languages.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the Bazel project directory
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of bazel arguments such as "build", "test", "//target"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
     <dt>
     <a name = "build"></a>
     <strong>build (manifest, build_dir, build_type, options)</strong>
@@ -186,6 +291,35 @@
 <pre><code>                 enable/disable features, or pass parameters to the build system
 </code></pre>
 
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "cargo_wrapper"></a>
+    <strong>cargo_wrapper (build_dir, make_opts, args)</strong>
+    </dt>
+    <dd>
+    Execute Cargo build commands for Rust projects</p>
+
+<p> This function provides a wrapper for Cargo, Rust's package manager and build tool.
+ It supports building, testing, and installing Rust crates with parallel compilation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the Cargo project directory
+        </li>
+        <li><span class="parameter">make_opts</span>
+         table Configuration for parallel execution including jobs limit
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of Cargo arguments such as "build", "test", "install", "--release"
         </li>
     </ul>
 
@@ -264,6 +398,131 @@
 <pre><code>              feature flags, library paths, and other autotools configuration options
 </code></pre>
 
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "curl_wrapper"></a>
+    <strong>curl_wrapper (url, dest, args)</strong>
+    </dt>
+    <dd>
+    Download files using curl  This function provides a wrapper for curl, enabling file downloads and HTTP requests.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+         string URL to download
+        </li>
+        <li><span class="parameter">dest</span>
+         string Destination file path (optional)
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of curl arguments such as "-fsSL", "-o"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "git_clone_wrapper"></a>
+    <strong>git_clone_wrapper (url, dest, args)</strong>
+    </dt>
+    <dd>
+    Clone git repositories  This function provides a wrapper for git clone, enabling repository cloning.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+         string Git repository URL to clone
+        </li>
+        <li><span class="parameter">dest</span>
+         string Destination directory for the cloned repository
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of git arguments such as "--depth", "--branch"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "git_wrapper"></a>
+    <strong>git_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute arbitrary git commands  This function provides a wrapper for git operations like checkout, pull, etc.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the git repository directory
+        </li>
+        <li><span class="parameter">args</span>
+         table Array of git arguments such as "checkout", "pull", "submodule", "update"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "go_wrapper"></a>
+    <strong>go_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute Go build commands</p>
+
+<p> This function provides a wrapper for the Go programming language build tool.
+ It supports building Go packages and installing binaries.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the Go project directory
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of go arguments such as "build", "install", "-o", tags
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "gradle_wrapper"></a>
+    <strong>gradle_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute Gradle build commands for Java/Android projects  This function provides a wrapper for Gradle, a build automation tool
+ used for Java, Android, and other JVM-based projects.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the Gradle project directory
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of gradle arguments such as "build", "assemble", "test"
         </li>
     </ul>
 
@@ -378,6 +637,32 @@
 
 </dd>
     <dt>
+    <a name = "mvn_wrapper"></a>
+    <strong>mvn_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute Maven build commands for Java projects</p>
+
+<p> This function provides a wrapper for Maven, a build automation tool for Java projects.
+ It supports compiling, testing, and packaging Java applications.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the Maven project directory
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of mvn arguments such as "compile", "package", "-DskipTests"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "ninja_wrapper"></a>
     <strong>ninja_wrapper (build_dir, make_opts, args)</strong>
     </dt>
@@ -422,6 +707,213 @@
 
 
 </dd>
+    <dt>
+    <a name = "npm_wrapper"></a>
+    <strong>npm_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute npm commands for Node.js packages</p>
+
+<p> This function provides a wrapper for npm, Node.js package manager.
+ It supports installing dependencies, running scripts, and building Node.js projects.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the Node.js project directory
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of npm arguments such as "install", "run build", "--production"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "patch_wrapper"></a>
+    <strong>patch_wrapper (build_dir, patch_file, args)</strong>
+    </dt>
+    <dd>
+    Apply patches to source files  This function provides a wrapper for the patch command, enabling
+ application of diff/patch files to source code.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the directory where patch should be applied
+        </li>
+        <li><span class="parameter">patch_file</span>
+         string Path to the patch file
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of patch arguments such as "-p1", "-i"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "python_wrapper"></a>
+    <strong>python_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Run Python scripts or modules  This function provides a wrapper for running Python scripts and modules.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path where python should be executed
+        </li>
+        <li><span class="parameter">args</span>
+         table Array of Python arguments such as "setup.py", "build", "install"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "scons_wrapper"></a>
+    <strong>scons_wrapper (build_dir, args)</strong>
+    </dt>
+    <dd>
+    Execute SCons build commands</p>
+
+<p> This function provides a wrapper for SCons, a Python-based build tool.
+ It supports building software projects using SConstruct files.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">build_dir</span>
+         string Absolute path to the SCons project directory
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of scons arguments such as "-j" for parallel, "install"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "setuid_wrapper"></a>
+    <strong>setuid_wrapper (file, owner, mode)</strong>
+    </dt>
+    <dd>
+    Set file ownership and permissions (setuid/setgid)  This function provides a wrapper for chown and chmod to set file ownership
+ and special permissions like setuid/setgid.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file</span>
+         string Path to the file or directory
+        </li>
+        <li><span class="parameter">owner</span>
+         string Owner in "user:group" format (optional, nil for chmod only)
+        </li>
+        <li><span class="parameter">mode</span>
+         string Permission mode (e.g., "4755" for setuid+rwx)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "tar_wrapper"></a>
+    <strong>tar_wrapper (archive, dest, args)</strong>
+    </dt>
+    <dd>
+    Extract tar archives  This function provides a wrapper for tar, enabling extraction of tar, tar.gz, tar.bz2, tar.xz archives.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">archive</span>
+         string Path to the archive file
+        </li>
+        <li><span class="parameter">dest</span>
+         string Destination directory for extraction (optional)
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of tar arguments
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "unzip_wrapper"></a>
+    <strong>unzip_wrapper (archive, dest, args)</strong>
+    </dt>
+    <dd>
+    Extract zip archives  This function provides a wrapper for unzip, enabling extraction of zip archives.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">archive</span>
+         string Path to the zip file
+        </li>
+        <li><span class="parameter">dest</span>
+         string Destination directory for extraction (optional)
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of unzip arguments such as "-q" for quiet
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wget_wrapper"></a>
+    <strong>wget_wrapper (url, dest, args)</strong>
+    </dt>
+    <dd>
+    Download files using wget  This function provides a wrapper for wget, enabling file downloads.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+         string URL to download
+        </li>
+        <li><span class="parameter">dest</span>
+         string Destination file path (optional)
+        </li>
+        <li><span class="parameter">args</span>
+         table Optional array of wget arguments such as "-q", "-O", "--no-check-certificate"
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
 </dl>
 
 
@@ -429,7 +921,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-02-09 16:58:37 </i>
+<i style="float:right;">Last updated 2026-02-19 22:58:40 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

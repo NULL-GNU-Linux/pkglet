@@ -16,11 +16,13 @@ A Lua-based hybrid package manager for the NULL GNU/Linux distribution.
 ## Documentation
 
 Generate documentation:
+
 ```
 make docs
 ```
 
 Install documentation:
+
 ```
 make install_docs
 ```
@@ -32,6 +34,7 @@ make install
 ```
 
 Default installation:
+
 - Binary: `/usr/bin/pkglet`
 - Modules: `/usr/lib/pkglet/*.lua`
 - Config: `/etc/pkglet/`
@@ -137,8 +140,6 @@ pkglet i org.kernel.linux --force
 pkglet install org.kernel.linux --force
 ```
 
-
-
 ### Search Packages
 
 ```bash
@@ -181,7 +182,7 @@ pkg = {
     maintainer = "You <you@example.com>",
     license = "MIT",
     homepage = "https://example.com",
-    depends = { 
+    depends = {
         "org.deps.foo>=1.0.0",
         { name = "org.deps.bar", constraint = "^2.0.0" }
     },
@@ -228,16 +229,16 @@ function pkg.source()
         hook("prepare")(function()
             -- Preparation steps
         end)
-        
+
         hook("build")(function()
             configure({"--prefix=/usr"})
             make()
         end)
-        
+
         hook("install")(function()
             make({"install"})
         end)
-        
+
         hook("post_install")(function()
             -- Post-install steps
         end)
@@ -253,11 +254,11 @@ function pkg.binary()
         hook("pre_install")(function()
             -- Pre-install steps
         end)
-        
+
         hook("install")(function()
             -- Installation handled by pkglet
         end)
-        
+
         hook("post_install")(function()
             -- Post-install steps
         end)
@@ -273,7 +274,7 @@ function pkg.uninstall()
         hook("pre_uninstall")(function()
             -- Cleanup before uninstall
         end)
-        
+
         hook("post_uninstall")(function()
             -- Cleanup after uninstall
         end)
@@ -285,7 +286,7 @@ end
 
 Available in hook functions:
 
-- `make(args, is_build, destvar)` - Run make with configured options.
+- `make(args, is_build, destvar, prefix)` - Run make with configured options.
 - `cmake(args)` - Run cmake
 - `configure(args)` - Run ./configure
 - `ninja(args)` - Run ninja with configured options

@@ -42,6 +42,7 @@
   <li><a href="../modules/builder.html">builder</a></li>
   <li><a href="../modules/cli.html">cli</a></li>
   <li><a href="../modules/config.html">config</a></li>
+  <li><a href="../modules/conflict.html">conflict</a></li>
   <li><a href="../modules/example-manifest.html">example-manifest</a></li>
   <li><a href="../modules/fetcher.html">fetcher</a></li>
   <li><strong>installer</strong></li>
@@ -49,6 +50,7 @@
   <li><a href="../modules/resolver.html">resolver</a></li>
   <li><a href="../modules/search.html">search</a></li>
   <li><a href="../modules/sync.html">sync</a></li>
+  <li><a href="../modules/version.html">version</a></li>
 </ul>
 
 </div>
@@ -78,6 +80,18 @@
  with package capabilities.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#downgrade">downgrade (package_name, target_version, args)</a></td>
+	<td class="summary">Downgrade a package to a specific version (any string allowed)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_all_installed">get_all_installed ()</a></td>
+	<td class="summary">Get all installed packages</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_installed_version">get_installed_version (package_name)</a></td>
+	<td class="summary">Get installed version of a package</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#install">install (manifest, args)</a></td>
 	<td class="summary">Install a package from manifest with comprehensive dependency resolution and build orchestration
  This function is the core installation routine that handles the complete package lifecycle
@@ -90,22 +104,28 @@
  values from package manifests, global configuration settings, and command-line overrides.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#record_installation">record_installation (manifest)</a></td>
-	<td class="summary">Record package installation metadata in the package database
- This function creates a persistent record of package installations for tracking,
- dependency management, and system maintenance.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#remove_installation_record">remove_installation_record (manifest)</a></td>
 	<td class="summary">Remove package installation record from the package database during uninstallation
  This function cleans up the package database by removing the installation record
  for the specified package.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#resolve_optional_dependencies">resolve_optional_dependencies (manifest, visited)</a></td>
+	<td class="summary">Resolve optional dependencies (installable but not required)</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#uninstall">uninstall (manifest)</a></td>
 	<td class="summary">Uninstall a package with custom hook support and thorough cleanup
  This function handles complete package removal with support for custom uninstall hooks
  that packages can define for specialized cleanup procedures.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#upgrade">upgrade (package_name, args)</a></td>
+	<td class="summary">Upgrade a package to the latest available version</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#upgrade_all">upgrade_all (args)</a></td>
+	<td class="summary">Upgrade all installed packages to their latest versions</td>
 	</tr>
 </table>
 
@@ -179,6 +199,76 @@
 
 </dd>
     <dt>
+    <a name = "downgrade"></a>
+    <strong>downgrade (package_name, target_version, args)</strong>
+    </dt>
+    <dd>
+    Downgrade a package to a specific version (any string allowed)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string Name of the package to downgrade
+        </li>
+        <li><span class="parameter">target_version</span>
+         string Target version to downgrade to (can be any string: tag, commit, etc.)
+        </li>
+        <li><span class="parameter">args</span>
+         table Installation arguments
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_all_installed"></a>
+    <strong>get_all_installed ()</strong>
+    </dt>
+    <dd>
+    Get all installed packages
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table List of all installed package names
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_installed_version"></a>
+    <strong>get_installed_version (package_name)</strong>
+    </dt>
+    <dd>
+    Get installed version of a package
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string Name of the package
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string|nil Installed version, or nil if not installed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "install"></a>
     <strong>install (manifest, args)</strong>
     </dt>
@@ -244,32 +334,6 @@
 
 </dd>
     <dt>
-    <a name = "record_installation"></a>
-    <strong>record_installation (manifest)</strong>
-    </dt>
-    <dd>
-    Record package installation metadata in the package database
- This function creates a persistent record of package installations for tracking,
- dependency management, and system maintenance.  It stores essential metadata
- including package name, version, and installation timestamp in a simple key-value
- format that can be easily queried by other system components. The database
- records are critical for determining installed status, managing updates, and
- providing audit trails for system administration and security compliance.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">manifest</span>
-         table Package manifest containing name, version, and other metadata to be recorded
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "remove_installation_record"></a>
     <strong>remove_installation_record (manifest)</strong>
     </dt>
@@ -291,6 +355,34 @@
         </li>
     </ul>
 
+
+
+
+
+</dd>
+    <dt>
+    <a name = "resolve_optional_dependencies"></a>
+    <strong>resolve_optional_dependencies (manifest, visited)</strong>
+    </dt>
+    <dd>
+    Resolve optional dependencies (installable but not required)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">manifest</span>
+         table Package manifest
+        </li>
+        <li><span class="parameter">visited</span>
+         table Tracking set to prevent cycles (internal use)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table Optional dependencies that could be installed
+    </ol>
 
 
 
@@ -323,6 +415,49 @@
 
 
 </dd>
+    <dt>
+    <a name = "upgrade"></a>
+    <strong>upgrade (package_name, args)</strong>
+    </dt>
+    <dd>
+    Upgrade a package to the latest available version
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string Name of the package to upgrade
+        </li>
+        <li><span class="parameter">args</span>
+         table Installation arguments
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "upgrade_all"></a>
+    <strong>upgrade_all (args)</strong>
+    </dt>
+    <dd>
+    Upgrade all installed packages to their latest versions
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">args</span>
+         table Installation arguments
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
 </dl>
 
 
@@ -330,7 +465,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-02-09 16:58:37 </i>
+<i style="float:right;">Last updated 2026-02-19 22:58:40 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

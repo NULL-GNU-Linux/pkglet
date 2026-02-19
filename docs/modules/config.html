@@ -42,6 +42,7 @@
   <li><a href="../modules/builder.html">builder</a></li>
   <li><a href="../modules/cli.html">cli</a></li>
   <li><strong>config</strong></li>
+  <li><a href="../modules/conflict.html">conflict</a></li>
   <li><a href="../modules/example-manifest.html">example-manifest</a></li>
   <li><a href="../modules/fetcher.html">fetcher</a></li>
   <li><a href="../modules/installer.html">installer</a></li>
@@ -49,6 +50,7 @@
   <li><a href="../modules/resolver.html">resolver</a></li>
   <li><a href="../modules/search.html">search</a></li>
   <li><a href="../modules/sync.html">sync</a></li>
+  <li><a href="../modules/version.html">version</a></li>
 </ul>
 
 </div>
@@ -75,6 +77,10 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#add_repo">add_repo (name, path)</a></td>
+	<td class="summary">Add a new repository</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#get_make_opts">get_make_opts ()</a></td>
 	<td class="summary">Retrieve make system configuration options for parallel builds</p>
 
@@ -88,6 +94,10 @@
 <p> This function performs one-time initialization of the pkglet configuration system
  by creating all required directories (database, build, and distfiles directories)
  and loading configuration from various files.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_pinned">is_pinned (package_name)</a></td>
+	<td class="summary">Check if a package is pinned to a specific version</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#load_masks">load_masks ()</a></td>
@@ -104,11 +114,26 @@
  files and loads them into the config.package_options table.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#load_pins">load_pins ()</a></td>
+	<td class="summary">Load package pin list from the package.lock configuration file</p>
+
+<p> This function reads the package pin file to identify packages that should
+ be locked to specific versions.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#load_repos">load_repos ()</a></td>
 	<td class="summary">Load repository configuration from the repos.conf file</p>
 
 <p> This function parses the repository configuration file to populate the
  config.repos table with available package repositories.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pin_package">pin_package (package_name, version)</a></td>
+	<td class="summary">Pin a package to a specific version</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_repo">remove_repo (name)</a></td>
+	<td class="summary">Remove a repository</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#set_bootstrap_root">set_bootstrap_root (path)</a></td>
@@ -117,6 +142,10 @@
 <p> This function updates all path configurations to point to a bootstrap root
  directory, enabling pkglet to install packages to an alternate filesystem
  hierarchy.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#unpin_package">unpin_package (package_name)</a></td>
+	<td class="summary">Unpin a package, allowing automatic upgrades</td>
 	</tr>
 </table>
 
@@ -127,6 +156,29 @@
     <h2 class="section-header "><a name="Functions"></a>Functions</h2>
 
     <dl class="function">
+    <dt>
+    <a name = "add_repo"></a>
+    <strong>add_repo (name, path)</strong>
+    </dt>
+    <dd>
+    Add a new repository
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         string Repository name
+        </li>
+        <li><span class="parameter">path</span>
+         string Repository path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
     <dt>
     <a name = "get_make_opts"></a>
     <strong>get_make_opts ()</strong>
@@ -189,6 +241,31 @@
 
 </dd>
     <dt>
+    <a name = "is_pinned"></a>
+    <strong>is_pinned (package_name)</strong>
+    </dt>
+    <dd>
+    Check if a package is pinned to a specific version
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string Name of the package to check
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string|nil Pinned version, or nil if not pinned
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "load_masks"></a>
     <strong>load_masks ()</strong>
     </dt>
@@ -239,6 +316,31 @@
 
 </dd>
     <dt>
+    <a name = "load_pins"></a>
+    <strong>load_pins ()</strong>
+    </dt>
+    <dd>
+    Load package pin list from the package.lock configuration file</p>
+
+<p> This function reads the package pin file to identify packages that should
+ be locked to specific versions.  Package pinning prevents automatic upgrades
+ of critical packages, ensuring system stability by maintaining known working
+ versions. The pin list provides administrators with fine-grained control over
+ package version management.</p>
+
+<p> Each line in the pin file specifies a package name and exact version that
+ should be enforced. The function supports comment lines starting with # for
+ documentation and ignores empty lines, making the pin file maintainable and
+ self-documenting.
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "load_repos"></a>
     <strong>load_repos ()</strong>
     </dt>
@@ -256,6 +358,49 @@
  in minimal configurations or during initial setup.
 
 
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pin_package"></a>
+    <strong>pin_package (package_name, version)</strong>
+    </dt>
+    <dd>
+    Pin a package to a specific version
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string Name of the package to pin
+        </li>
+        <li><span class="parameter">version</span>
+         string Version to pin the package to
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_repo"></a>
+    <strong>remove_repo (name)</strong>
+    </dt>
+    <dd>
+    Remove a repository
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         string Repository name to remove
+        </li>
+    </ul>
 
 
 
@@ -297,6 +442,26 @@
 
 
 </dd>
+    <dt>
+    <a name = "unpin_package"></a>
+    <strong>unpin_package (package_name)</strong>
+    </dt>
+    <dd>
+    Unpin a package, allowing automatic upgrades
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">package_name</span>
+         string Name of the package to unpin
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
 </dl>
 
 
@@ -304,7 +469,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-02-09 16:58:37 </i>
+<i style="float:right;">Last updated 2026-02-19 22:58:40 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
