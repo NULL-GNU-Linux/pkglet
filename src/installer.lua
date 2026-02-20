@@ -74,7 +74,11 @@ function installer.install(manifest, args)
 	if installer.count_keys(packages_to_install) > 0 then
 		print("Packages to install:")
 		for name, version in pairs(packages_to_install) do
-			print("  \27[7m" .. name .. "\27[0m " .. version)
+			local pkg_manifest = loader.load_manifest(name)
+			local build_type = installer.determine_build_type(pkg_manifest, args.build_from)
+			local build_type_label = build_type == "source" and "[S]" or "[B]"
+			local label = "\27[34m" .. build_type_label .. "\27[0m"
+			print("  " .. label .. " \27[7m" .. name .. "\27[0m " .. version)
 		end
 		print("")
 	else
@@ -86,6 +90,7 @@ function installer.install(manifest, args)
 		print("")
 		return
 	end
+
 	if not args.noask then
 		io.write("Proceed with installation? \27[7m[Y/n]\27[0m ")
 		local response = io.read()

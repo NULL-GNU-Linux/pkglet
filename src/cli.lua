@@ -76,7 +76,41 @@ function cli.parse(args)
             end
         else
             if not parsed.package then
-                parsed.package = arg
+                local pkg_spec = arg
+                local pkg_name, pkg_opts = pkg_spec:match("^([^%{]+)%{(.+)%}$")
+                if pkg_name then
+                    local base_name = pkg_name:match("^~(.+)$")
+                    if base_name then
+                        parsed.build_from = "source"
+                        parsed.package = base_name
+                    else
+                        parsed.package = pkg_name
+                    end
+                    for opt_pair in pkg_opts:gmatch("([^,]+),?") do
+                        local opt_key, opt_val = opt_pair:match("^([^=]+)=(.+)$")
+                        if opt_key then
+                            if opt_val == "true" then
+                                parsed.options[opt_key] = true
+                            elseif opt_val == "false" then
+                                parsed.options[opt_key] = false
+                            else
+                                parsed.options[opt_key] = opt_val
+                            end
+                        else
+                            local flag = opt_pair:match("^([^=]+)$")
+                            if flag and flag ~= "" then
+                                parsed.options[flag] = true
+                            end
+                        end
+                    end
+                else
+                    if pkg_spec:match("^~") then
+                        parsed.build_from = "source"
+                        parsed.package = pkg_spec:sub(2)
+                    else
+                        parsed.package = pkg_spec
+                    end
+                end
             else
                 parsed.query = arg
             end
@@ -141,13 +175,24 @@ function cli.print_help()
 "   pkglet downgrade org.kernel.linux --to 6.15.0\n" ..
 "   pkglet d org.kernel.linux --to v6.15.0\n" ..
 "   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
-
+"\n" ..
 "   pkglet pin org.kernel.linux 6.17.5\n" ..
 "   pkglet unpin org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux --noask\n" ..
 "   pkglet S\n" ..
 "   pkglet s git\n" ..
+"\n" ..
+"SYNTAX SHORTCUTS:\n" ..
+"   ~pkgname                       Build from source (same as --source)\n" ..
+"   pkgname{key=value,key2=value2} Set package options inline\n" ..
+"   ~pkgname{option=true}          Build from source with options\n" ..
+"\n" ..
+"EXAMPLES:\n" ..
+"   pkglet install ~org.kernel.linux\n" ..
+"   pkglet install org.kernel.linux{no_headers=true}\n" ..
+"   pkglet install ~org.kernel.linux{menuconfig=true}\n" ..
+"   pkglet install virtual-webserver\n" ..
 "\n" ..
 "LICENSE: \27[1;30mMIT\27[0m\n")
 end
