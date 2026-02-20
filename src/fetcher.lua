@@ -87,15 +87,15 @@ function fetcher.fetch_tar(spec, build_dir)
 	print("Extracting " .. filename .. "...")
 	local extract_cmd
 	if filename:match("%.tar%.gz$") or filename:match("%.tgz$") then
-		extract_cmd = "tar xzf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+		extract_cmd = "tar xzf " .. distfile .. " -C " .. build_dir .. " " .. spec.args
 	elseif filename:match("%.tar%.bz2$") or filename:match("%.tbz2$") then
-		extract_cmd = "tar xjf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+		extract_cmd = "tar xjf " .. distfile .. " -C " .. build_dir .. " " .. spec.args
 	elseif filename:match("%.tar%.xz$") or filename:match("%.txz$") then
-		extract_cmd = "tar xJf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+		extract_cmd = "tar xJf " .. distfile .. " -C " .. build_dir .. " " .. spec.args
 	elseif filename:match("%.zip$") then
-		extract_cmd = "unzip -q " .. distfile .. " -d " .. build_dir
+		extract_cmd = "unzip -q " .. distfile .. " -d " .. build_dir .. " " .. spec.args
 	else
-		extract_cmd = "tar xf " .. distfile .. " -C " .. build_dir .. " --strip-components=1"
+		extract_cmd = "tar xf " .. distfile .. " -C " .. build_dir .. " " .. spec.args
 	end
 	local ok, _, code = os.execute(extract_cmd)
 	if not ok or code ~= 0 then

@@ -295,7 +295,7 @@ Available in hook functions:
 
 ### Source Types
 
-- `tar`: Downloads and extracts tar archives (gz, bz2, xz, zip)
+- `tar`: Downloads and extracts archives (tar (gz, bz2, xz, ...), zip)
 - `git`: Clones git repositories
 - `file`: Downloads single files
 
@@ -339,28 +339,11 @@ optional_depends = {
 }
 ```
 
-## Architecture
-
-### Modules
-
-Each module serves a single purpose:
-
-- `cli.lua` - Command-line argument parsing
-- `config.lua` - Configuration and settings management
-- `loader.lua` - Package manifest loading and validation
-- `resolver.lua` - Dependency resolution
-- `fetcher.lua` - Source downloading and extraction
-- `builder.lua` - Build process orchestration
-- `installer.lua` - Installation and uninstallation
-- `search.lua` - Package searching
-- `sync.lua` - Repository synchronization
-- `version.lua` - Version comparison and sorting
-
-### File Locations
+## File Locations
 
 - Installed packages database: `/var/lib/pkglet/`
-- Build cache: `~/.cache/pkglet/build/`
-- Downloaded sources: `~/.cache/pkglet/distfiles/`
+- Build cache: `/var/cache/pkglet/build/`
+- Downloaded sources: `/var/cache/pkglet/distfiles/`
 
 ## License
 
