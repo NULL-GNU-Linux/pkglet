@@ -48,6 +48,7 @@ function fetcher.fetch_all(sources, build_dir)
 end
 
 function fetcher.fetch_tar(spec, build_dir)
+    spec.args = spec.args or ""
 	local filename = spec.url:match("([^/]+)$")
 	local distfile = config.DISTFILES_PATH .. "/" .. filename
 	if not fetcher.file_exists(distfile) then
