@@ -33,7 +33,7 @@ function conflict.get_providers(virtual_name)
                 local manifest_path = line:match("^%s*(.-)%s*$")
                 if manifest_path and manifest_path ~= "" then
                     local ok, manifest = pcall(function()
-                        local env = {}
+                        local env = { ARCH = "x86_64" }
                         setmetatable(env, {__index = _G})
                         local chunk, err = loadfile(manifest_path, "t", env)
                         if not chunk then return nil end

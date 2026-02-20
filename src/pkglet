@@ -16,47 +16,14 @@ local function main()
 
         local package_name = args.package
         local conflict = require("src.conflict")
-        local is_virtual = false
-        for repo_name, repo_path in pairs(config.repos) do
-            local cmd = "find " .. repo_path .. " -name manifest.lua"
-            local handle = io.popen(cmd)
-            if handle then
-                for line in handle:lines() do
-                    local manifest_path = line:match("^%s*(.-)%s*$")
-                    if manifest_path and manifest_path ~= "" then
-                        local ok, manifest = pcall(function()
-                            local env = {}
-                            setmetatable(env, {__index = _G})
-                            local chunk, err = loadfile(manifest_path, "t", env)
-                            if not chunk then return nil end
-                            chunk()
-                            return env.pkg
-                        end)
+        local providers = conflict.get_providers(package_name)
 
-                        if ok and manifest and manifest.name == package_name then
-                            is_virtual = false
-                            break
-                        end
-                        if ok and manifest and manifest.provides then
-                            for _, provides in ipairs(manifest.provides) do
-                                if provides == package_name then
-                                    package_name = manifest.name
-                                    is_virtual = true
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-                handle:close()
-            end
+        if #providers > 0 then
+            package_name = providers[1]
+            print("Resolving virtual package " .. args.package .. " to " .. package_name)
         end
 
         local manifest = loader.load_manifest(package_name)
-
-        if is_virtual then
-            print("Resolving virtual package " .. args.package .. " to " .. package_name)
-        end
 
         local pinned_version = config.is_pinned(package_name)
         if pinned_version then
