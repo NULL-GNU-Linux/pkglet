@@ -236,7 +236,7 @@ function pkg.source()
         end)
 
         hook("install")(function()
-            make({"install"})
+            make({}, false)
         end)
 
         hook("post_install")(function()
@@ -292,6 +292,7 @@ Available in hook functions:
 - `ninja(args)` - Run ninja with configured options
 - `exec(command)` - An alias to Lua's `os.execute`
 - `OPTIONS` - Table of enabled package options
+- and a lot more!
 
 ### Source Types
 

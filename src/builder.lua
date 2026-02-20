@@ -322,8 +322,9 @@ end
 --
 -- @param build_dir string Absolute path to the directory where install command should be executed
 -- @param args table Optional array of additional arguments passed directly to install command
-function builder.install_wrapper(build_dir, args)
-	local cmd = "cd " .. build_dir .. " && install"
+function builder.install_wrapper(build_dir, args, command)
+    command = command or "install"
+	local cmd = "cd " .. build_dir .. " && " .. command
 	local package_name = build_dir:match("([^/]+)$")
 	local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. package_name
 	if args then
