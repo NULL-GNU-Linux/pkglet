@@ -55,8 +55,8 @@ function builder.build(manifest, build_dir, build_type, options)
 	env.ninja = function(args)
 		return builder.ninja_wrapper(build_dir, make_opts, args)
 	end
-	env.install = function(args)
-		return builder.install_wrapper(build_dir, args)
+	env.install = function(args, command)
+		return builder.install_wrapper(build_dir, args, command)
 	end
 	env.meson = function(args)
 		return builder.meson_wrapper(build_dir, args)
