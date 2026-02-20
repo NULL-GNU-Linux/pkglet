@@ -24,7 +24,7 @@ function loader.find_manifest(package_name)
         end
         error("package not found: " .. package_name)
     end
-    
+
     for repo_name, repo_path in pairs(config.repos) do
         local manifest_path = repo_path .. "/" .. package_name:gsub("%.", "/") .. "/manifest.lua"
         local f = io.open(manifest_path, "r")
@@ -58,6 +58,7 @@ function loader.load_manifest(package_name)
         CONFIG = {},
         ROOT = "/",
         OPTIONS = {},
+        ARCH = "x86_64",
     }
     setmetatable(env, {__index = _G})
     local chunk, err = loadfile(manifest_path, "t", env)

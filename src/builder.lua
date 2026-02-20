@@ -106,6 +106,10 @@ function builder.build(manifest, build_dir, build_type, options)
 	env.setuid = function(file, owner, mode)
 		return builder.setuid_wrapper(build_dir,file, owner, mode)
 	end
+	local f = io.popen("uname -m")
+	local arch = f:read("*l")
+	f:close()
+	env.ARCH = arch
 	env.exec = os.execute
 	env.ROOT = config.ROOT
 	env.CONFIG = config
