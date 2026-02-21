@@ -18,28 +18,33 @@ local function main()
         local conflict = require("src.conflict")
         local providers = conflict.get_providers(package_name)
 
-        if #providers > 1 then
-            if args.force then
-                package_name = providers[1]
-                print("Multiple providers for " .. args.package .. ", using " .. package_name .. " (--force)")
-            else
-                print("Multiple providers available for " .. args.package .. ":")
-                for i, p in ipairs(providers) do
-                    print("  " .. i .. ". " .. p)
-                end
-                io.write("Choose provider: ")
-                local choice = io.read()
-                local idx = tonumber(choice)
-                if idx and idx >= 1 and idx <= #providers then
-                    package_name = providers[idx]
-                else
-                    print("Invalid choice, using " .. providers[1])
+        if #providers > 0 then
+            if #providers > 1 then
+                if args.force then
                     package_name = providers[1]
+                    print("Multiple providers for " .. args.package .. ", using " .. package_name .. " (--force)")
+                else
+                    print("Multiple providers available for " .. args.package .. ":")
+                    for i, p in ipairs(providers) do
+                        print("  " .. i .. ". " .. p)
+                    end
+                    io.write("Choose provider: ")
+                    local choice = io.read()
+                    local idx = tonumber(choice)
+                    if idx and idx >= 1 and idx <= #providers then
+                        package_name = providers[idx]
+                    else
+                        print("Invalid choice, using " .. providers[1])
+                        package_name = providers[1]
+                    end
                 end
+            else
+                package_name = providers[1]
+                print("Resolving virtual package " .. args.package .. " to " .. package_name)
             end
-        elseif #providers == 1 then
-            package_name = providers[1]
-            print("Resolving virtual package " .. args.package .. " to " .. package_name)
+            if args.package_build_types and args.package_build_types[args.package] then
+                args.package_build_types[package_name] = args.package_build_types[args.package]
+            end
         end
 
         local manifest = loader.load_manifest(package_name)
