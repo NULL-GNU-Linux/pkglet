@@ -33,6 +33,8 @@ function cli.parse(args)
         query = nil,
         build_from = "auto",
         options = {},
+        package_options = {},
+        package_build_types = {},
         bootstrap_to = nil,
         noask = false,
         nodeps = false,
@@ -81,32 +83,34 @@ function cli.parse(args)
                 if pkg_name then
                     local base_name = pkg_name:match("^~(.+)$")
                     if base_name then
-                        parsed.build_from = "source"
+                        parsed.package_build_types[base_name] = "source"
                         parsed.package = base_name
                     else
                         parsed.package = pkg_name
                     end
+                    parsed.package_options[pkg_name] = {}
                     for opt_pair in pkg_opts:gmatch("([^,]+),?") do
                         local opt_key, opt_val = opt_pair:match("^([^=]+)=(.+)$")
                         if opt_key then
                             if opt_val == "true" then
-                                parsed.options[opt_key] = true
+                                parsed.package_options[pkg_name][opt_key] = true
                             elseif opt_val == "false" then
-                                parsed.options[opt_key] = false
+                                parsed.package_options[pkg_name][opt_key] = false
                             else
-                                parsed.options[opt_key] = opt_val
+                                parsed.package_options[pkg_name][opt_key] = opt_val
                             end
                         else
                             local flag = opt_pair:match("^([^=]+)$")
                             if flag and flag ~= "" then
-                                parsed.options[flag] = true
+                                parsed.package_options[pkg_name][flag] = true
                             end
                         end
                     end
                 else
                     if pkg_spec:match("^~") then
-                        parsed.build_from = "source"
-                        parsed.package = pkg_spec:sub(2)
+                        local pkgname = pkg_spec:sub(2)
+                        parsed.package_build_types[pkgname] = "source"
+                        parsed.package = pkgname
                     else
                         parsed.package = pkg_spec
                     end

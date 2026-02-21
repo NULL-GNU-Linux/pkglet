@@ -75,7 +75,7 @@ function installer.install(manifest, args)
 		print("Packages to install:")
 		for name, version in pairs(packages_to_install) do
 			local pkg_manifest = loader.load_manifest(name)
-			local build_type = installer.determine_build_type(pkg_manifest, args.build_from)
+			local build_type = installer.determine_build_type(pkg_manifest, args.build_from, name, args.package_build_types)
 			local build_type_label = build_type == "source" and "[S]" or "[B]"
 			local label = "\27[34m" .. build_type_label .. "\27[0m"
 			print("  " .. label .. " \27[7m" .. name .. "\27[0m " .. version)
@@ -108,9 +108,20 @@ function installer.install(manifest, args)
 	for _, name in ipairs(install_order) do
 		local pkg_manifest = loader.load_manifest(name)
 		print("Installing " .. pkg_manifest.name .. " " .. pkg_manifest.version)
-		local build_type = installer.determine_build_type(pkg_manifest, args.build_from)
+		local build_type = installer.determine_build_type(pkg_manifest, args.build_from, name, args.package_build_types)
 		print("Build type: " .. build_type)
-		local options = installer.merge_options(pkg_manifest, args.options)
+		local merged_opts = {}
+		if args.package_options and args.package_options[name] then
+			for k, v in pairs(args.package_options[name]) do
+				merged_opts[k] = v
+			end
+		end
+		if args.options then
+			for k, v in pairs(args.options) do
+				merged_opts[k] = v
+			end
+		end
+		local options = installer.merge_options(pkg_manifest, merged_opts)
 		local build_dir = config.BUILD_PATH .. "/" .. pkg_manifest.name
 		local temp_install_dir = config.TEMP_INSTALL_PATH .. "/" .. pkg_manifest.name
 		os.execute("rm -rf " .. build_dir)
@@ -189,12 +200,29 @@ end
 -- scenarios with different performance requirements.
 -- @param manifest table Package manifest containing available source and binary specifications
 -- @param preference string User's preferred build type: "source" for compilation, "binary" for pre-compiled packages, or "auto" for automatic selection
+-- @param pkg_name string Optional package name for per-package override
+-- @param package_build_types table Optional table of per-package build types
 -- @return string The final determined build type that will be used for installation
-function installer.determine_build_type(manifest, preference)
+function installer.determine_build_type(manifest, preference, pkg_name, package_build_types)
 	if preference == "source" then
 		return "source"
 	elseif preference == "binary" then
 		return "binary"
+	end
+
+	if package_build_types and pkg_name and package_build_types[pkg_name] then
+		return package_build_types[pkg_name]
+	end
+
+	local make_opts = config.get_make_opts()
+	if make_opts.default_build_mode == "source" then
+		if manifest.sources.source then
+			return "source"
+		end
+	elseif make_opts.default_build_mode == "binary" then
+		if manifest.sources.binary then
+			return "binary"
+		end
 	end
 
 	if manifest.sources.binary then

@@ -35,6 +35,7 @@ install:
 	fi
 	@if [ ! -f $(ETCDIR)/make.lua ]; then \
 		echo "-- pkglet build configuration" > $(ETCDIR)/make.lua; \
+		echo "default_build_mode = \"binary\"" >> $(ETCDIR)/make.lua; \
 		echo "MAKEOPTS = {" >> $(ETCDIR)/make.lua; \
 		echo "    jobs = 8," >> $(ETCDIR)/make.lua; \
 		echo "    load = 9," >> $(ETCDIR)/make.lua; \

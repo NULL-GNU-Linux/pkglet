@@ -172,6 +172,7 @@ function config.get_make_opts()
         jobs = 1,
         load = 1,
         extra = "",
+        default_build_mode = "binary",
     }
 
     local f = io.open(config.MAKE_CONF, "r")
@@ -183,6 +184,18 @@ function config.get_make_opts()
         if fn then
             pcall(fn)
             if env.MAKEOPTS then opts = env.MAKEOPTS end
+            if env.default_build_mode then
+                opts.default_build_mode = env.default_build_mode
+            end
+            if env.jobs then
+                opts.jobs = env.jobs
+            end
+            if env.load then
+                opts.load = env.load
+            end
+            if env.extra then
+                opts.extra = env.extra
+            end
         end
     end
     return opts
