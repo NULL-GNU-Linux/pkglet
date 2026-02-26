@@ -111,7 +111,9 @@ function builder.build(manifest, build_dir, build_type, options)
 	f:close()
 	env.ARCH = arch
 	env.exec = function(command)
-        os.execute("cd " ..  build_dir .. " && " .. command)
+        local cmd = "cd " ..  build_dir .. " && " .. command
+        print("\27[7m-> " .. cmd .. "\27[0m")
+        os.execute(cmd)
     end
 	env.ROOT = config.ROOT
 	env.CONFIG = config
