@@ -100,7 +100,7 @@ function installer.install(manifest, args)
 		end
 	end
 
-    os.execute("mkdir -p " .. CONFIG.ROOT)
+    os.execute("mkdir -p " .. config.ROOT)
 	local install_order = {}
 	for name, version in pairs(packages_to_install) do
 		table.insert(install_order, name)
