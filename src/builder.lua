@@ -110,7 +110,9 @@ function builder.build(manifest, build_dir, build_type, options)
 	local arch = f:read("*l")
 	f:close()
 	env.ARCH = arch
-	env.exec = os.execute
+	env.exec = function(command)
+        os.execute("cd " ..  build_dir .. " && " .. command)
+    end
 	env.ROOT = config.ROOT
 	env.CONFIG = config
 	local build_fn
