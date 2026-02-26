@@ -38,6 +38,7 @@ function cli.parse(args)
         bootstrap_to = nil,
         noask = false,
         nodeps = false,
+        compression = "gzip",
     }
 
     if #args == 0 then
@@ -68,6 +69,9 @@ function cli.parse(args)
             parsed.pin = true
         elseif arg == "--unpin" then
             parsed.unpin = true
+        elseif arg == "--compression" then
+            i = i + 1
+            parsed.compression = args[i]
         elseif arg:match("^%-%-") then
             local opt = arg:sub(3)
             local key, value = opt:match("^([^=]+)=(.+)$")
@@ -146,6 +150,7 @@ function cli.print_help()
 "\n" ..
 "COMMANDS:\n" ..
 "   \27[1;37mi/install <package>\27[0m        Install a package\n" ..
+"   \27[1;37mb/build <package>\27[0m          Build package to tarball\n" ..
 "   \27[1;37mu/uninstall <package>\27[0m      Uninstall a package\n" ..
 "   \27[1;37mU/upgrade <package>\27[0m        Upgrade a package\n" ..
 "   \27[1;37md/downgrade <package>\27[0m      Downgrade a package\n" ..
@@ -158,6 +163,7 @@ function cli.print_help()
 "OPTIONS:\n" ..
 "   \27[1;37m--source\27[0m                   Build from source\n" ..
 "   \27[1;37m--binary\27[0m                   Install binary package\n" ..
+"   \27[1;37m--compression <type>\27[0m       Compression type (gzip, bzip2, xz, zstd, none)\n" ..
 "   \27[1;37m--bootstrap-to <path>\27[0m      Bootstrap to alternate root\n" ..
 "   \27[1;37m--noask\27[0m                    Skip installation confirmation\n" ..
 "   \27[1;37m--nodeps\27[0m                   Skip dependency installation\n" ..
@@ -171,6 +177,8 @@ function cli.print_help()
 "\n" ..
 "EXAMPLES:\n" ..
 "   pkglet i org.kernel.linux\n" ..
+"   pkglet b org.kernel.linux\n" ..
+"   pkglet build org.kernel.linux --compression xz\n" ..
 "   pkglet install org.kernel.linux --source --menuconfig\n" ..
 "   pkglet install org.kernel.linux --with-optional\n" ..
 "   pkglet install gcc --bootstrap-to=/mnt/bootstrap\n" ..

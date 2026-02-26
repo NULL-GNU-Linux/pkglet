@@ -140,7 +140,48 @@ local function main()
         local manifest = loader.load_manifest(args.package)
         loader.print_info(manifest)
 
-    
+
+    elseif args.command == "b" or args.command == "build" then
+        local temp_dir = os.tmpname()
+        os.execute("rm -f " .. temp_dir)
+        os.execute("mkdir -p " .. temp_dir)
+        local bootstrap_dir = temp_dir .. "/root"
+        os.execute("mkdir -p " .. bootstrap_dir)
+        args.bootstrap_to = bootstrap_dir
+        args.nodeps = true
+        local conflict = require("src.conflict")
+        local providers = conflict.get_providers(args.package)
+        if #providers > 0 then
+            args.package = providers[1]
+        end
+        local manifest = loader.load_manifest(args.package)
+        installer.install(manifest, args)
+        local pkg_name = args.package:gsub("%.", "-")
+        local output_file = pkg_name .. "-" .. manifest.version .. ".tar"
+        local compression = args.compression or "gzip"
+        if compression == "gzip" then
+            output_file = output_file .. ".gz"
+        elseif compression == "bzip2" then
+            output_file = output_file .. ".bz2"
+        elseif compression == "xz" then
+            output_file = output_file .. ".xz"
+        elseif compression == "zstd" then
+            output_file = output_file .. ".zst"
+        end
+        local tar_opts = "-cf"
+        if compression == "gzip" then
+            tar_opts = "-czf"
+        elseif compression == "bzip2" then
+            tar_opts = "-cjf"
+        elseif compression == "xz" then
+            tar_opts = "-cJf"
+        elseif compression == "zstd" then
+            tar_opts = "-cf --zstd"
+        end
+        os.execute("cd " .. bootstrap_dir .. " && tar " .. tar_opts .. " " .. output_file .. " . 2>/dev/null")
+        os.execute("mv " .. bootstrap_dir .. "/" .. output_file .. " .")
+        os.execute("rm -rf " .. temp_dir)
+        print("Built: " .. output_file)
 
     elseif args.command == "c" or args.command == "clean" then
         os.execute("rm -rf " .. config.CACHE_PATH)
