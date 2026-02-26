@@ -153,7 +153,6 @@ function cli.print_help()
 "   \27[1;37munpin <package>\27[0m            Unpin package\n" ..
 "   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
 "   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
-
 "   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
 "\n" ..
 "OPTIONS:\n" ..
@@ -179,24 +178,21 @@ function cli.print_help()
 "   pkglet downgrade org.kernel.linux --to 6.15.0\n" ..
 "   pkglet d org.kernel.linux --to v6.15.0\n" ..
 "   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
-"\n" ..
 "   pkglet pin org.kernel.linux 6.17.5\n" ..
 "   pkglet unpin org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux\n" ..
 "   pkglet uninstall org.kernel.linux --noask\n" ..
 "   pkglet S\n" ..
 "   pkglet s git\n" ..
+"   pkglet install ~org.kernel.linux\n" ..
+"   pkglet install org.kernel.linux{no_headers=true}\n" ..
+"   pkglet install ~org.kernel.linux{menuconfig=true}\n" ..
+"   pkglet install virtual-webserver\n" ..
 "\n" ..
 "SYNTAX SHORTCUTS:\n" ..
 "   ~pkgname                       Build from source (same as --source)\n" ..
 "   pkgname{key=value,key2=value2} Set package options inline\n" ..
 "   ~pkgname{option=true}          Build from source with options\n" ..
-"\n" ..
-"EXAMPLES:\n" ..
-"   pkglet install ~org.kernel.linux\n" ..
-"   pkglet install org.kernel.linux{no_headers=true}\n" ..
-"   pkglet install ~org.kernel.linux{menuconfig=true}\n" ..
-"   pkglet install virtual-webserver\n" ..
 "\n" ..
 "LICENSE: \27[1;30mMIT\27[0m\n")
 end
