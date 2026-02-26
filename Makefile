@@ -14,7 +14,8 @@ docs:
 
 install_docs:
 	@echo "Installing documentation..."
-	install -Dm644 docs/* $(PREFIX)/share/doc/pkglet/
+	@mkdir -p /usr/share/doc/pkglet/
+	cp -r docs/* $(PREFIX)/share/doc/pkglet/
 
 install:
 	@echo "Installing pkglet..."
