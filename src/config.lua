@@ -26,7 +26,6 @@ end
 local function setup_non_root_paths()
     local home = get_home()
     local local_base = home .. "/.local"
-
     config.PREFIX = local_base
     config.ROOT = local_base .. "/"
     config.BIN_PATH = local_base .. "/bin"
@@ -34,7 +33,7 @@ local function setup_non_root_paths()
     config.LIB64_PATH = local_base .. "/lib64"
     config.SHARE_PATH = local_base .. "/share"
     config.DB_PATH = local_base .. "/var/lib/pkglet"
-    config.CACHE_PATH = local_base .. "/cache/pkglet"
+    config.CACHE_PATH = home .. "/.cache/pkglet"
     config.BUILD_PATH = config.CACHE_PATH .. "/build"
     config.TEMP_INSTALL_PATH = config.CACHE_PATH .. "/temp_install"
     config.DISTFILES_PATH = config.CACHE_PATH .. "/distfiles"
@@ -52,7 +51,6 @@ else
     local prefix = os.getenv("PKGLET_PREFIX") or ""
     config.PREFIX = prefix
     config.ROOT = prefix .. "/"
-    
     if prefix == "/usr/local" or prefix == "" then
         config.BIN_PATH = "/usr/local/bin"
         config.LIB_PATH = "/usr/local/lib"
@@ -64,7 +62,6 @@ else
         config.LIB64_PATH = prefix .. "/lib64"
         config.SHARE_PATH = prefix .. "/share"
     end
-    
     config.DB_PATH = config.PREFIX .. "/var/lib/pkglet"
     config.CACHE_PATH = "/var/cache/pkglet"
     config.BUILD_PATH = config.CACHE_PATH .. "/build"
@@ -121,7 +118,6 @@ end
 function config.load_repos()
     local f = io.open(config.REPOS_CONF, "r")
     if not f then return end
-    
     for line in f:lines() do
         line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
         if line ~= "" then
