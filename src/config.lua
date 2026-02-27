@@ -14,19 +14,70 @@
 -- @module config
 
 local config = {}
-config.PREFIX = os.getenv("PKGLET_PREFIX") or ""
-config.ROOT = config.PREFIX .. "/"
-config.DB_PATH = config.PREFIX .. "/var/lib/pkglet"
-config.CACHE_PATH = "/var/cache/pkglet"
-config.BUILD_PATH = config.CACHE_PATH .. "/build"
-config.TEMP_INSTALL_PATH = config.CACHE_PATH .. "/temp_install"
-config.DISTFILES_PATH = config.CACHE_PATH .. "/distfiles"
-config.CONFIG_DIR = "/etc/pkglet"
-config.REPOS_CONF = config.CONFIG_DIR .. "/repos.conf"
-config.MAKE_CONF = config.CONFIG_DIR .. "/make.lua"
-config.PACKAGE_OPTS = config.CONFIG_DIR .. "/package.opts"
-config.PACKAGE_MASK = config.CONFIG_DIR .. "/package.mask"
-config.PACKAGE_LOCK = config.CONFIG_DIR .. "/package.lock"
+
+local function is_root()
+    return os.execute("id -u 2>/dev/null | grep -q '^0$'") == true
+end
+
+local function get_home()
+    return os.getenv("HOME") or "/root"
+end
+
+local function setup_non_root_paths()
+    local home = get_home()
+    local local_base = home .. "/.local"
+
+    config.PREFIX = local_base
+    config.ROOT = local_base .. "/"
+    config.BIN_PATH = local_base .. "/bin"
+    config.LIB_PATH = local_base .. "/lib"
+    config.LIB64_PATH = local_base .. "/lib64"
+    config.SHARE_PATH = local_base .. "/share"
+    config.DB_PATH = local_base .. "/var/lib/pkglet"
+    config.CACHE_PATH = local_base .. "/cache/pkglet"
+    config.BUILD_PATH = config.CACHE_PATH .. "/build"
+    config.TEMP_INSTALL_PATH = config.CACHE_PATH .. "/temp_install"
+    config.DISTFILES_PATH = config.CACHE_PATH .. "/distfiles"
+    config.CONFIG_DIR = home .. "/.config/pkglet"
+    config.REPOS_CONF = config.CONFIG_DIR .. "/repos.conf"
+    config.MAKE_CONF = config.CONFIG_DIR .. "/make.lua"
+    config.PACKAGE_OPTS = config.CONFIG_DIR .. "/package.opts"
+    config.PACKAGE_MASK = config.CONFIG_DIR .. "/package.mask"
+    config.PACKAGE_LOCK = config.CONFIG_DIR .. "/package.lock"
+end
+
+if not is_root() then
+    setup_non_root_paths()
+else
+    local prefix = os.getenv("PKGLET_PREFIX") or ""
+    config.PREFIX = prefix
+    config.ROOT = prefix .. "/"
+    
+    if prefix == "/usr/local" or prefix == "" then
+        config.BIN_PATH = "/usr/local/bin"
+        config.LIB_PATH = "/usr/local/lib"
+        config.LIB64_PATH = "/usr/local/lib64"
+        config.SHARE_PATH = "/usr/local/share"
+    else
+        config.BIN_PATH = prefix .. "/bin"
+        config.LIB_PATH = prefix .. "/lib"
+        config.LIB64_PATH = prefix .. "/lib64"
+        config.SHARE_PATH = prefix .. "/share"
+    end
+    
+    config.DB_PATH = config.PREFIX .. "/var/lib/pkglet"
+    config.CACHE_PATH = "/var/cache/pkglet"
+    config.BUILD_PATH = config.CACHE_PATH .. "/build"
+    config.TEMP_INSTALL_PATH = config.CACHE_PATH .. "/temp_install"
+    config.DISTFILES_PATH = config.CACHE_PATH .. "/distfiles"
+    config.CONFIG_DIR = "/etc/pkglet"
+    config.REPOS_CONF = config.CONFIG_DIR .. "/repos.conf"
+    config.MAKE_CONF = config.CONFIG_DIR .. "/make.lua"
+    config.PACKAGE_OPTS = config.CONFIG_DIR .. "/package.opts"
+    config.PACKAGE_MASK = config.CONFIG_DIR .. "/package.mask"
+    config.PACKAGE_LOCK = config.CONFIG_DIR .. "/package.lock"
+end
+
 config.global_options = {}
 config.package_options = {}
 config.masked_packages = {}
@@ -76,7 +127,11 @@ function config.load_repos()
         if line ~= "" then
             local name, path = line:match("^(%S+)%s+(%S+)$")
             if name and path then
-                config.repos[name] = path
+                if path:match("^https?://") or path:match("^git@") or path:match("%.git$") then
+                    config.repos[name] = { url = path, is_git = true }
+                else
+                    config.repos[name] = { path = path, is_git = false }
+                end
             end
         end
     end
@@ -254,7 +309,13 @@ end
 -- @param name string Repository name
 -- @param path string Repository path
 function config.add_repo(name, path)
-    config.repos[name] = path
+    local repo_entry
+    if path:match("^https?://") or path:match("^git@") or path:match("%.git$") then
+        repo_entry = { url = path, is_git = true }
+    else
+        repo_entry = { path = path, is_git = false }
+    end
+    config.repos[name] = repo_entry
     
     local f = io.open(config.REPOS_CONF, "a")
     if f then
@@ -286,6 +347,39 @@ function config.remove_repo(name)
         end
         f:close()
     end
+end
+
+function config.ensure_repo(name)
+    local repo = config.repos[name]
+    if not repo then
+        return nil
+    end
+    
+    if repo.is_git then
+        local target_path = config.CACHE_PATH .. "/repos/" .. name
+        if not config.repo_exists(target_path) then
+            print("Cloning repository " .. name .. "...")
+            local ok = os.execute("mkdir -p " .. config.CACHE_PATH .. "/repos")
+            if ok then
+                ok = os.execute("git clone " .. repo.url .. " " .. target_path)
+                if not ok then
+                    error("failed to clone repository: " .. repo.url)
+                end
+            end
+        end
+        return target_path
+    else
+        return repo.path
+    end
+end
+
+function config.repo_exists(path)
+    local f = io.open(path, "r")
+    if f then
+        f:close()
+        return true
+    end
+    return false
 end
 
 --- Check if a package is pinned to a specific version

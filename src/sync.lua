@@ -24,9 +24,14 @@ local config = require("src.config")
 -- all package repositories are synchronized with their remote counterparts.
 function sync.update_repos()
 	print("syncing repositories...")
-	for repo_name, repo_path in pairs(config.repos) do
-		print("  " .. repo_name .. " -> " .. repo_path)
-		sync.update_repo(repo_path)
+	for repo_name, repo_entry in pairs(config.repos) do
+		local repo_path = config.ensure_repo(repo_name)
+		if repo_path then
+			print("  " .. repo_name .. " -> " .. repo_path)
+			sync.update_repo(repo_path)
+		else
+			print("  " .. repo_name .. " (not a git repo, skipping)")
+		end
 	end
 	print("sync complete.")
 end

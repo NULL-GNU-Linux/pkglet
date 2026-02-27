@@ -13,24 +13,30 @@ local config = require("src.config")
 function loader.find_manifest(package_name)
 	local repo, pkg_name = package_name:match("^([^/]+)/(.+)$")
 	if repo and pkg_name then
-		local repo_path = config.repos[repo]
-		if repo_path then
-			local manifest_path = repo_path .. "/" .. pkg_name:gsub("%.", "/") .. "/manifest.lua"
-			local f = io.open(manifest_path, "r")
-			if f then
-				f:close()
-				return manifest_path
+		local repo_entry = config.repos[repo]
+		if repo_entry then
+			local repo_path = config.ensure_repo(repo)
+			if repo_path then
+				local manifest_path = repo_path .. "/" .. pkg_name:gsub("%.", "/") .. "/manifest.lua"
+				local f = io.open(manifest_path, "r")
+				if f then
+					f:close()
+					return manifest_path
+				end
 			end
 		end
 		error("package not found: " .. package_name)
 	end
 
-	for repo_name, repo_path in pairs(config.repos) do
-		local manifest_path = repo_path .. "/" .. package_name:gsub("%.", "/") .. "/manifest.lua"
-		local f = io.open(manifest_path, "r")
-		if f then
-			f:close()
-			return manifest_path
+	for repo_name, repo_entry in pairs(config.repos) do
+		local repo_path = config.ensure_repo(repo_name)
+		if repo_path then
+			local manifest_path = repo_path .. "/" .. package_name:gsub("%.", "/") .. "/manifest.lua"
+			local f = io.open(manifest_path, "r")
+			if f then
+				f:close()
+				return manifest_path
+			end
 		end
 	end
 	error("package not found: " .. package_name)

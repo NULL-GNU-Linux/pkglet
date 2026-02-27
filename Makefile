@@ -1,8 +1,18 @@
 DESTDIR ?=
+IS_ROOT := $(shell id -u 2>/dev/null)
+ifeq ($(IS_ROOT),0)
 PREFIX ?= $(DESTDIR)/usr
 BINDIR = $(PREFIX)/bin
 LIBDIR = $(PREFIX)/lib/pkglet
 ETCDIR = /etc/pkglet
+CACHEDIR = /var/cache/pkglet
+else
+PREFIX ?= $(DESTDIR)$(HOME)/.local
+BINDIR = $(PREFIX)/bin
+LIBDIR = $(PREFIX)/lib/pkglet
+ETCDIR = $(HOME)/.config/pkglet
+CACHEDIR = $(HOME)/.cache/pkglet
+endif
 MODULES = $(shell find src -name '*.lua')
 .PHONY: all install uninstall clean
 all:
@@ -20,17 +30,24 @@ install_docs:
 install:
 	@echo "Installing pkglet..."
 	@rm -rf $(LIBDIR)
-	@rm -rf $(BINDIR)/pkglet
+	@rm -f $(BINDIR)/pkglet
 	install -Dm755 src/pkglet $(BINDIR)/pkglet
-	ln -sf $(BINDIR)/pkglet $(BINDIR)/]
+	ln -sf $(BINDIR)/pkglet $(BINDIR)/pkg
 	install -dm755 $(LIBDIR)
 	$(foreach module,$(MODULES),install -Dm644 $(module) $(LIBDIR)/$(module);)
 	install -dm755 $(ETCDIR)
 	install -dm755 $(ETCDIR)/package.opts
+	install -dm755 $(CACHEDIR)
+	install -dm755 $(CACHEDIR)/build
+	install -dm755 $(CACHEDIR)/distfiles
+	install -dm755 $(CACHEDIR)/temp_install
+	install -dm755 $(CACHEDIR)/repos
 	@echo "Creating default config files..."
 	@if [ ! -f $(ETCDIR)/repos.conf ]; then \
 		echo "# pkglet repository configuration" > $(ETCDIR)/repos.conf; \
 		echo "# Format: <name> <path>" >> $(ETCDIR)/repos.conf; \
+		echo "# For git repositories, use URL:" >> $(ETCDIR)/repos.conf; \
+		echo "# main https://github.com/user/repo.git" >> $(ETCDIR)/repos.conf; \
 		echo "# Example:" >> $(ETCDIR)/repos.conf; \
 		echo "# main /var/db/pkglet/repos/main" >> $(ETCDIR)/repos.conf; \
 	fi

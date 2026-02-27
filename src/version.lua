@@ -349,7 +349,9 @@ function version.get_available_versions(package_name)
     local config = require("src.config")
     local versions = {}
     
-    for repo_name, repo_path in pairs(config.repos) do
+    for repo_name, repo_entry in pairs(config.repos) do
+        local repo_path = config.ensure_repo(repo_name)
+        if not repo_path then goto continue end
         local manifest_path = repo_path .. "/" .. package_name:gsub("%.", "/") .. "/manifest.lua"
         local f = io.open(manifest_path, "r")
         if f then
@@ -359,6 +361,7 @@ function version.get_available_versions(package_name)
                 table.insert(versions, manifest.version)
             end
         end
+        ::continue::
     end
     
     table.sort(versions, function(a, b)

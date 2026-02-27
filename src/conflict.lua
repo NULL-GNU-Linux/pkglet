@@ -25,7 +25,9 @@ local config = require("src.config")
 function conflict.get_providers(virtual_name)
     local providers = {}
     
-    for repo_name, repo_path in pairs(config.repos) do
+    for repo_name, repo_entry in pairs(config.repos) do
+        local repo_path = config.ensure_repo(repo_name)
+        if not repo_path then goto continue end
         local cmd = "find " .. repo_path .. " -name manifest.lua"
         local handle = io.popen(cmd)
         if handle then
@@ -53,6 +55,7 @@ function conflict.get_providers(virtual_name)
             end
             handle:close()
         end
+        ::continue::
     end
     
     return providers
@@ -291,7 +294,9 @@ function conflict.resolve_virtual_dependencies(dependencies)
     for dep_name, dep_constraint in pairs(dependencies) do
         local is_virtual = false
         
-        for repo_name, repo_path in pairs(config.repos) do
+        for repo_name, repo_entry in pairs(config.repos) do
+            local repo_path = config.ensure_repo(repo_name)
+            if not repo_path then goto continue2 end
             local cmd = "find " .. repo_path .. " -name manifest.lua"
             local handle = io.popen(cmd)
             if handle then
@@ -315,8 +320,8 @@ function conflict.resolve_virtual_dependencies(dependencies)
                 end
                 handle:close()
             end
+            ::continue2::
         end
-        
         if not is_virtual then
             local provider = conflict.select_provider(dep_name, dep_constraint)
             if provider then

@@ -21,8 +21,11 @@ function search.query(pattern)
 		print("\27[1;31merror\27[0m: no repositories configured.")
 		return
 	end
-	for repo_name, repo_path in pairs(config.repos) do
-		search.scan_repo(repo_name, repo_path, pattern, results)
+	for repo_name, repo_entry in pairs(config.repos) do
+		local repo_path = config.ensure_repo(repo_name)
+		if repo_path then
+			search.scan_repo(repo_name, repo_path, pattern, results)
+		end
 	end
 	if #results == 0 then
 		print("\27[1;31merror\27[0m: target not found: " .. pattern)
