@@ -1,5 +1,15 @@
 #!/usr/bin/env lua
-local PKGLET_LIB = "/usr/lib/pkglet"
+local function get_pkglet_lib()
+    local f = io.popen("id -u 2>/dev/null")
+    local is_root = f:read("*a"):match("^0$")
+    f:close()
+    if is_root then
+        return "/usr/lib/pkglet"
+    else
+        return os.getenv("HOME") .. "/.local/lib/pkglet"
+    end
+end
+local PKGLET_LIB = get_pkglet_lib()
 package.path = PKGLET_LIB .. "/?.lua;" .. package.path
 local cli = require("src.cli")
 local loader = require("src.loader")
@@ -9,6 +19,22 @@ local config = require("src.config")
 local function main()
     config.init()
     local args = cli.parse(arg)
+    local binary_name = arg[0] or ""
+    local is_bracket = binary_name:match(".*/]$") or binary_name == "]"
+    if is_bracket then
+        local has_b = false
+        for _, a in ipairs(arg) do
+            if a == "b" or a == "build" then
+                has_b = true
+                break
+            end
+        end
+        if not has_b then
+            table.insert(arg, 1, "install")
+            args = cli.parse(arg)
+        end
+    end
+
     if args.command == "i" or args.command == "install" then
         if args.unpin then
             config.unpin_package(args.package)
@@ -17,7 +43,6 @@ local function main()
         local package_name = args.package
         local conflict = require("src.conflict")
         local providers = conflict.get_providers(package_name)
-
         if #providers > 0 then
             if #providers > 1 then
                 if args.force then
@@ -64,7 +89,7 @@ local function main()
 
     elseif args.command == "u" or args.command == "uninstall" then
         local manifest = loader.load_manifest(args.package)
-        
+
         if not args.noask then
             io.write("Uninstall " .. args.package .. "? \27[7m[Y/n]\27[0m ")
             local response = io.read()
@@ -73,7 +98,7 @@ local function main()
                 return
             end
         end
-        
+
         installer.uninstall(manifest)
         config.unpin_package(args.package)
 
@@ -101,7 +126,7 @@ local function main()
             config.pin_package(args.package, target_version)
         end
 
-    
+
 
     elseif args.command == "pin" then
         local package_name = args.package
@@ -132,9 +157,9 @@ local function main()
         local sync = require("src.sync")
         sync.update_repos()
 
-    
 
-        
+
+
 
     elseif args.command == "I" or args.command == "info" then
         local manifest = loader.load_manifest(args.package)

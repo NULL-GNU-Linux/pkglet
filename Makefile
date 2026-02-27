@@ -33,6 +33,8 @@ install:
 	@rm -f $(BINDIR)/pkglet
 	install -Dm755 src/pkglet $(BINDIR)/pkglet
 	ln -sf $(BINDIR)/pkglet $(BINDIR)/pkg
+	ln -sf $(BINDIR)/pkglet $(BINDIR)/]
+	ln -sf $(BINDIR)/pkglet $(BINDIR)/pl
 	install -dm755 $(LIBDIR)
 	$(foreach module,$(MODULES),install -Dm644 $(module) $(LIBDIR)/$(module);)
 	install -dm755 $(ETCDIR)
