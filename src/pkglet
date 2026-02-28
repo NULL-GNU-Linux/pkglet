@@ -204,11 +204,17 @@ local function main()
             tar_opts = "-cf --zstd"
         end
         print(":: stripping binaries")
-        os.execute("cd " .. bootstrap_dir .. " && (strip **/* || true)")
+        os.execute([[
+cd ]] .. bootstrap_dir .. [[ && \
+find usr -type f -executable -exec strip {} + 2>/dev/null || true
+]])
         print(":: upx'ing binaries")
-        os.execute("cd " .. bootstrap_dir .. " && (upx **/* || true)")
+        os.execute([[
+cd ]] .. bootstrap_dir .. [[ && \
+find usr -type f -executable -exec upx {} + 2>/dev/null || true
+]])
         print(":: compressing output")
-        os.execute("cd " .. bootstrap_dir .. " && tar " .. tar_opts .. " " .. output_file .. " . 2>/dev/null")
+        os.execute("cd " .. bootstrap_dir .. " && tar --checkpoint=10 --checkpoint-action=ttyout=':: %u files done\\r' " .. tar_opts .. " " .. output_file .. " . 2>/dev/null")
         os.execute("mv " .. bootstrap_dir .. "/" .. output_file .. " .")
         os.execute("rm -rf " .. temp_dir)
         print(":: built: " .. output_file)
