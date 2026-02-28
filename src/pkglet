@@ -206,7 +206,7 @@ local function main()
         print(":: stripping binaries")
         os.execute([[
 cd ]] .. bootstrap_dir .. [[ && \
-find usr -type f -executable -exec strip {} + 2>/dev/null || true
+find usr -type f -executable -exec strip --strip-unneeded {} + 2>/dev/null || true
 ]])
         print(":: upx'ing binaries")
         os.execute([[
