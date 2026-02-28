@@ -203,10 +203,15 @@ local function main()
         elseif compression == "zstd" then
             tar_opts = "-cf --zstd"
         end
+        print(":: stripping binaries")
+        os.execute("cd " .. bootstrap_dir .. " && (strip **/* || true)")
+        print(":: upx'ing binaries")
+        os.execute("cd " .. bootstrap_dir .. " && (upx **/* || true)")
+        print(":: compressing output")
         os.execute("cd " .. bootstrap_dir .. " && tar " .. tar_opts .. " " .. output_file .. " . 2>/dev/null")
         os.execute("mv " .. bootstrap_dir .. "/" .. output_file .. " .")
         os.execute("rm -rf " .. temp_dir)
-        print("Built: " .. output_file)
+        print(":: built: " .. output_file)
 
     elseif args.command == "c" or args.command == "clean" then
         os.execute("rm -rf " .. config.CACHE_PATH)
