@@ -271,7 +271,12 @@ end
 function config.set_bootstrap_root(path)
     config.PREFIX = path
     config.ROOT = path .. "/"
-    config.DB_PATH = path .. "/var/lib/pkglet"
+    local marker = path .. "/var/.pkglet"
+    local f = io.open(marker, "r")
+    if f then
+        f:close()
+        config.DB_PATH = path .. "/var/"
+    end
 end
 
 --- Load package pin list from the package.lock configuration file
@@ -312,7 +317,7 @@ function config.add_repo(name, path)
         repo_entry = { path = path, is_git = false }
     end
     config.repos[name] = repo_entry
-    
+
     local f = io.open(config.REPOS_CONF, "a")
     if f then
         f:write(name .. " " .. path .. "\n")
@@ -324,7 +329,7 @@ end
 -- @param name string Repository name to remove
 function config.remove_repo(name)
     config.repos[name] = nil
-    
+
     local lines = {}
     local f = io.open(config.REPOS_CONF, "r")
     if f then
@@ -335,7 +340,7 @@ function config.remove_repo(name)
         end
         f:close()
     end
-    
+
     f = io.open(config.REPOS_CONF, "w")
     if f then
         for _, line in ipairs(lines) do
@@ -350,7 +355,7 @@ function config.ensure_repo(name)
     if not repo then
         return nil
     end
-    
+
     if repo.is_git then
         local target_path = config.CACHE_PATH .. "/repos/" .. name
         if not config.repo_exists(target_path) then
@@ -390,7 +395,7 @@ end
 -- @param version string Version to pin the package to
 function config.pin_package(package_name, version)
     config.pinned_packages[package_name] = version
-    
+
     local f = io.open(config.PACKAGE_LOCK, "a")
     if f then
         f:write(package_name .. " " .. version .. "\n")
@@ -402,7 +407,7 @@ end
 -- @param package_name string Name of the package to unpin
 function config.unpin_package(package_name)
     config.pinned_packages[package_name] = nil
-    
+
     local lines = {}
     local f = io.open(config.PACKAGE_LOCK, "r")
     if f then
@@ -413,7 +418,7 @@ function config.unpin_package(package_name)
         end
         f:close()
     end
-    
+
     f = io.open(config.PACKAGE_LOCK, "w")
     if f then
         for _, line in ipairs(lines) do
