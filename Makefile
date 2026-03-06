@@ -19,16 +19,15 @@ all:
 	@echo "this is pkglet lmao, no building step."
 
 docs:
-	@echo "Generating documentation..."
-	ldoc .
+	rm -rf docs/Markdownium
+	cd docs && git clone https://github.com/Markdownium/Markdownium
+	cp docs/config.json docs/Markdownium/
 
 install_docs:
-	@echo "Installing documentation..."
 	@mkdir -p /usr/share/doc/pkglet/
 	cp -r docs/* $(PREFIX)/share/doc/pkglet/
 
 install:
-	@echo "Installing pkglet..."
 	@rm -rf $(LIBDIR)
 	@rm -f $(BINDIR)/pkglet
 	install -Dm755 src/pkglet $(BINDIR)/pkglet
@@ -44,7 +43,6 @@ install:
 	install -dm755 $(CACHEDIR)/distfiles
 	install -dm755 $(CACHEDIR)/temp_install
 	install -dm755 $(CACHEDIR)/repos
-	@echo "Creating default config files..."
 	@if [ ! -f $(ETCDIR)/repos.conf ]; then \
 		echo "# pkglet repository configuration" > $(ETCDIR)/repos.conf; \
 		echo "# Format: <name> <path>" >> $(ETCDIR)/repos.conf; \
@@ -66,14 +64,11 @@ install:
 		echo "# pkglet package mask" > $(ETCDIR)/package.mask; \
 		echo "# One package per line" >> $(ETCDIR)/package.mask; \
 	fi
-	@echo "Installation complete!"
 
 uninstall:
-	@echo "Uninstalling pkglet..."
 	rm -f $(BINDIR)/pkglet
 	rm -rf $(LIBDIR)
 	@echo "Configuration files in $(ETCDIR) were not removed"
-	@echo "Uninstall complete!"
 
 clean:
 	@echo "Nothing to clean"
