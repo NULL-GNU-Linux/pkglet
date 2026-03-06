@@ -24,7 +24,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Setup Markdownium
-        run: make docs
+        run: make docs -B
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
