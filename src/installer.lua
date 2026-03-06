@@ -1,23 +1,9 @@
---- Package installation module
--- @module installer
-
 local installer = {}
 local config = require("src.config")
 local fetcher = require("src.fetcher")
 local builder = require("src.builder")
 local resolver = require("src.resolver")
 local loader = require("src.loader")
-
---- Install a package from manifest with comprehensive dependency resolution and build orchestration
--- This function is the core installation routine that handles the complete package lifecycle
--- from source acquisition to final installation. It supports bootstrap mode for system-level
--- installations, performs conflict detection, resolves dependencies recursively, determines
--- optimal build strategies, merges configuration options, and records installation metadata.
--- The function orchestrates multiple subsystems including fetching, building, and database
--- management to ensure reliable and reproducible package installations across different
--- environments and configurations.
--- @param manifest table Complete package manifest containing metadata, dependencies, sources, and build instructions
--- @param args table Installation arguments including bootstrap options, build preferences, and custom configuration overrides
 function installer.install(manifest, args)
 	if os.getenv("PKGLET_DEBUG") == "1" then
 		print("DEBUG: args =")
@@ -145,15 +131,6 @@ function installer.install(manifest, args)
 	end
 end
 
---- Uninstall a package with custom hook support and thorough cleanup
--- This function handles complete package removal with support for custom uninstall hooks
--- that packages can define for specialized cleanup procedures. It checks installation
--- status, executes pre-uninstall hooks for preparation, removes installed files,
--- runs post-uninstall hooks for final cleanup, and removes installation records.
--- The hook system allows packages to perform complex uninstallation operations
--- such as stopping services, cleaning up configuration files, or reverting system
--- changes while ensuring no remnants remain after removal.
--- @param manifest table Package manifest containing uninstall hooks and metadata for proper cleanup
 function installer.uninstall(manifest)
 	print("Uninstalling " .. manifest.name)
 	if not resolver.is_installed(manifest.name) then
@@ -191,19 +168,6 @@ function installer.uninstall(manifest)
 	print("Successfully uninstalled " .. manifest.name)
 end
 
---- Determine optimal build type based on user preference and package availability
--- This function implements intelligent build type selection that balances user preferences
--- with package capabilities. When set to "auto", it prioritizes binary packages for faster
--- installation but falls back to source compilation when binaries aren't available. This
--- approach provides the best user experience by minimizing build times while ensuring
--- all packages remain installable regardless of pre-compiled binary availability.
--- The function is critical for supporting both development and production deployment
--- scenarios with different performance requirements.
--- @param manifest table Package manifest containing available source and binary specifications
--- @param preference string User's preferred build type: "source" for compilation, "binary" for pre-compiled packages, or "auto" for automatic selection
--- @param pkg_name string Optional package name for per-package override
--- @param package_build_types table Optional table of per-package build types
--- @return string The final determined build type that will be used for installation
 function installer.determine_build_type(manifest, preference, pkg_name, package_build_types)
 	if preference == "source" then
 		return "source"
@@ -235,17 +199,6 @@ function installer.determine_build_type(manifest, preference, pkg_name, package_
 	error("no valid source or binary available")
 end
 
---- Merge and prioritize configuration options from multiple sources
--- This function implements a sophisticated option merging system that combines default
--- values from package manifests, global configuration settings, and command-line overrides.
--- It follows a clear precedence hierarchy where CLI options override global settings,
--- which in turn override manifest defaults. The function handles boolean conversion
--- from string values and ensures that all option types are properly normalized for
--- consistent behavior across different configuration sources. This system enables
--- flexible package customization while maintaining predictable configuration behavior.
--- @param manifest table Package manifest containing default option definitions and values
--- @param cli_options table Command-line options that take highest precedence in the merge hierarchy
--- @return table Final merged options with all sources combined and properly typed
 function installer.merge_options(manifest, cli_options)
 	local options = {}
 	if manifest.options then
@@ -289,29 +242,11 @@ function installer.record_installation(manifest, files_list)
 	end
 end
 
---- Remove package installation record from the package database during uninstallation
--- This function cleans up the package database by removing the installation record
--- for the specified package. This is essential for maintaining database integrity
--- and ensuring that the system correctly reflects the current installation state.
--- The removal is typically performed during uninstallation operations and prevents
--- stale records from interfering with future installation attempts or dependency
--- resolution. The function uses a simple file deletion approach matching the
--- record creation mechanism for consistency.
--- @param manifest table Package manifest whose installation record should be removed
 function installer.remove_installation_record(manifest)
 	local db_file = config.DB_PATH .. "/" .. manifest.name:gsub("%.", "-")
 	os.remove(db_file)
 end
 
---- Remove all files installed by a package during uninstallation process
--- This function handles the actual file removal for package uninstallation, ensuring
--- that all files, directories, and artifacts created during installation are properly
--- cleaned up. This is a critical component of the uninstallation process that must
--- be thorough to prevent leftover files from accumulating and potentially causing
--- conflicts or system issues. The function is designed to work with package manifests
--- that track installed files and can be extended to support more sophisticated
--- file tracking and removal strategies for complex packages.
--- @param manifest table Package manifest containing information about installed files and directories to remove
 function installer.copy_from_temp(manifest)
 	local temp_path = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
 	local dest_path = config.ROOT
@@ -562,10 +497,6 @@ function installer.run_single_hook(manifest, args)
 	print("Hook '" .. tostring(hook_name) .. "' completed successfully")
 end
 
---- Resolve optional dependencies (installable but not required)
--- @param manifest table Package manifest
--- @param visited table Tracking set to prevent cycles (internal use)
--- @return table Optional dependencies that could be installed
 function installer.resolve_optional_dependencies(manifest, visited)
 	local version_module = require("src.version")
 	local loader = require("src.loader")
@@ -606,9 +537,6 @@ function installer.resolve_optional_dependencies(manifest, visited)
 	return optional_packages
 end
 
---- Get installed version of a package
--- @param package_name string Name of the package
--- @return string|nil Installed version, or nil if not installed
 function installer.get_installed_version(package_name)
 	local db_file = config.DB_PATH .. "/" .. package_name:gsub("%.", "-")
 	local f = io.open(db_file, "r")
@@ -627,8 +555,6 @@ function installer.get_installed_version(package_name)
 	return version
 end
 
---- Get all installed packages
--- @return table List of all installed package names
 function installer.get_all_installed()
 	local packages = {}
 	local handle = io.popen("ls " .. config.DB_PATH .. " 2>/dev/null")
@@ -644,8 +570,6 @@ function installer.get_all_installed()
 	return packages
 end
 
---- Upgrade all installed packages to their latest versions
--- @param args table Installation arguments
 function installer.upgrade_all(args)
 	local version_module = require("src.version")
 	local loader = require("src.loader")
@@ -698,9 +622,6 @@ function installer.upgrade_all(args)
 	end
 end
 
---- Upgrade a package to the latest available version
--- @param package_name string Name of the package to upgrade
--- @param args table Installation arguments
 function installer.upgrade(package_name, args)
 	local version_module = require("src.version")
 	local loader = require("src.loader")
@@ -722,10 +643,6 @@ function installer.upgrade(package_name, args)
 	installer.install(manifest, args)
 end
 
---- Downgrade a package to a specific version (any string allowed)
--- @param package_name string Name of the package to downgrade
--- @param target_version string Target version to downgrade to (can be any string: tag, commit, etc.)
--- @param args table Installation arguments
 function installer.downgrade(package_name, target_version, args)
 	local version_module = require("src.version")
 	local loader = require("src.loader")

@@ -73,7 +73,6 @@ local function main()
         end
 
         local manifest = loader.load_manifest(package_name)
-
         local pinned_version = config.is_pinned(package_name)
         if pinned_version then
             manifest.version = pinned_version
@@ -82,14 +81,12 @@ local function main()
         end
 
         installer.install(manifest, args)
-
         if args.pin then
             config.pin_package(package_name, manifest.version)
         end
 
     elseif args.command == "u" or args.command == "uninstall" then
         local manifest = loader.load_manifest(args.package)
-
         if not args.noask then
             io.write("Uninstall " .. args.package .. "? \27[7m[Y/n]\27[0m ")
             local response = io.read()
@@ -107,7 +104,6 @@ local function main()
             installer.upgrade_all(args)
         else
             installer.upgrade(args.package, args)
-
             if args.pin then
                 local latest_version = installer.get_installed_version(args.package)
                 config.pin_package(args.package, latest_version)
@@ -121,17 +117,13 @@ local function main()
             os.exit(1)
         end
         installer.downgrade(args.package, target_version, args)
-
         if args.pin then
             config.pin_package(args.package, target_version)
         end
 
-
-
     elseif args.command == "pin" then
         local package_name = args.package
         local target_version = args.target_version
-
         if target_version then
             config.pin_package(package_name, target_version)
             print("Pinned " .. package_name .. " to version " .. target_version)
@@ -157,14 +149,9 @@ local function main()
         local sync = require("src.sync")
         sync.update_repos()
 
-
-
-
-
     elseif args.command == "I" or args.command == "info" then
         local manifest = loader.load_manifest(args.package)
         loader.print_info(manifest)
-
 
     elseif args.command == "b" or args.command == "build" then
         local temp_dir = os.tmpname()

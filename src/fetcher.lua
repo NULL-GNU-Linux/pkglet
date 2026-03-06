@@ -1,9 +1,5 @@
---- Source fetching module
--- @module fetcher
-
 local fetcher = {}
 local config = require("src.config")
-
 function fetcher.fetch(source_spec, build_dir, options)
 	if type(source_spec) == "table" then
 		if source_spec[1] then

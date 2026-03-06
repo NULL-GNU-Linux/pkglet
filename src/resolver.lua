@@ -1,21 +1,5 @@
---- Dependency resolution module
--- @module resolver
-
 local resolver = {}
 local loader = require("src.loader")
-
---- Recursively resolve package dependencies with cycle detection and install order calculation
--- This function implements sophisticated dependency resolution that handles complex
--- dependency graphs while preventing infinite loops through cycle detection. It
--- traverses the dependency tree depth-first, tracking visited packages to avoid
--- duplication and circular dependencies. The function returns dependencies in the
--- correct order for installation, ensuring that all prerequisites are installed
--- before the packages that depend on them. This is critical for maintaining system
--- consistency and enabling complex multi-package installations.
--- @param manifest table Package manifest whose dependencies need to be resolved
--- @param resolved table Accumulator for resolved dependencies in install order (optional, used internally for recursion)
--- @param seen table Tracking set to detect cycles and prevent duplicate processing (optional, used internally for recursion)
--- @return table Ordered list of package names representing dependencies in correct installation sequence
 function resolver.resolve_dependencies(manifest, resolved, seen)
     resolved = resolved or {}
     seen = seen or {}
@@ -36,15 +20,6 @@ function resolver.resolve_dependencies(manifest, resolved, seen)
     return resolved
 end
 
---- Check package installation status by querying the package database
--- This function provides a reliable method to determine whether a package is currently
--- installed on the system by checking for the existence of its database record.
--- It uses the same naming convention as the installation system, converting package
--- names with dots to hyphens for filesystem compatibility. This function is
--- essential for dependency resolution, conflict detection, and system management
--- operations that need to differentiate between installed and available packages.
--- @param package_name string The full package name to check using dot notation
--- @return boolean True if the package is currently installed, false otherwise
 function resolver.is_installed(package_name)
     local config = require("src.config")
     local db_file = config.DB_PATH .. "/" .. package_name:gsub("%.", "-")
@@ -56,47 +31,32 @@ function resolver.is_installed(package_name)
     return false
 end
 
---- Check if any package provides a virtual package
--- @param virtual_name string Name of virtual package
--- @return boolean True if any installed package provides the virtual package
 function resolver.is_provided(virtual_name)
     local conflict = require("src.conflict")
     local providers = conflict.get_providers(virtual_name)
-    
+
     for _, provider in ipairs(providers) do
         if resolver.is_installed(provider) then
             return true
         end
     end
-    
+
     return false
 end
 
---- Get installed package that provides a virtual package
--- @param virtual_name string Name of virtual package
--- @return string|nil Name of installed package that provides the virtual package
 function resolver.get_provider(virtual_name)
     local conflict = require("src.conflict")
     local providers = conflict.get_providers(virtual_name)
-    
+
     for _, provider in ipairs(providers) do
         if resolver.is_installed(provider) then
             return provider
         end
     end
-    
+
     return nil
 end
 
---- Validate that no conflicting packages are currently installed
--- This function performs conflict resolution by checking the current installation
--- database against the package's declared conflicts list. It prevents installation
--- of packages that would interfere with each other, maintaining system stability
--- and preventing unexpected behavior. Conflicts are common when packages provide
--- alternative implementations of the same functionality or when they modify shared
--- system resources. This check is performed before installation to ensure that
--- the system remains in a consistent state after package operations.
--- @param manifest table Package manifest containing the conflicts list to validate against current installations
 function resolver.check_conflicts(manifest)
     if not manifest.conflicts then
         return
