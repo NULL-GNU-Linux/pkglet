@@ -315,9 +315,15 @@ end
 function installer.copy_from_temp(manifest)
 	local temp_path = config.TEMP_INSTALL_PATH .. "/" .. manifest.name
 	local dest_path = config.ROOT
+    local extras = ""
 	print("Copying files from temporary location...")
-	os.execute("cp -r " .. temp_path .. "/* " .. dest_path .. "/")
-
+    if manifest._backup and manifest._backup ~= "" then
+        extras = extras.." --backup="..manifest._backup
+    end
+    if manifest._extras and manifest._extras ~= "" then
+        extras = extras.." "..manifest._extras
+    end
+	os.execute("cp -r " .. temp_path .. "/* " .. dest_path .. "/ "..extras)
 	local files_list = {}
 	local handle = io.popen("cd " .. temp_path .. " && find . -type f -o -type l")
 	if handle then
