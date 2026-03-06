@@ -54,11 +54,11 @@ function search.query(pattern)
 		local description = pkg.description or "No description"
 		local license = pkg.license or "unknown"
 		print("\27[1;32m*\27[0m  " .. repo .. "/" .. pkg.name .. " " .. masked)
-		print("      Latest version available: " .. latest)
-		print("      Latest version installed: " .. installed)
-		print("      Homepage:      " .. homepage)
+		print("      Available: " .. latest)
+		print("      Installed: " .. installed)
+		print("      Homepage: " .. homepage)
 		print("      Description: " .. description)
-		print("      License:     " .. license)
+		print("      License: " .. license)
 		print()
 	end
 end
