@@ -2,5 +2,5 @@
   "siteName": "Pkglet Wiki",
   "logo": "https://null.obsidianos.xyz/logo.png",
   "baseUrl": "https://raw.githubusercontent.com/NULL-GNU-Linux/pkglet/refs/heads/main/docs/",
-  "licenseBadge": "<a href=\"https://www.gnu.org/licenses/fdl-1.3.html\" target=\"_blank\"><img width=\"50\" height=\"50\" src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/GFDL_Logo.svg/1920px-GFDL_Logo.svg.png\"></img></a>"
+  "licenseBadge": "<a href=\"https://www.gnu.org/licenses/fdl-1.3.html\" target=\"_blank\"><img width=\"100\" height=\"50\" src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/GFDL_Logo.svg/1920px-GFDL_Logo.svg.png\"></img></a>"
 }
