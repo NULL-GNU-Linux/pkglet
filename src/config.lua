@@ -275,7 +275,7 @@ function config.set_bootstrap_root(path)
     local f = io.open(marker, "r")
     if f then
         f:close()
-        config.DB_PATH = path .. "/var/"
+        config.DB_PATH = path .. "/var/lib/pkglet/"
     end
 end
 
