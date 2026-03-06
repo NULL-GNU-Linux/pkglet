@@ -323,7 +323,7 @@ function installer.copy_from_temp(manifest)
     if manifest._extras and manifest._extras ~= "" then
         extras = extras.." "..manifest._extras
     end
-	os.execute("cp -r " .. temp_path .. "/* " .. dest_path .. "/ "..extras)
+	os.execute("cp -rn " .. temp_path .. "/* " .. dest_path .. "/ "..extras)
 	local files_list = {}
 	local handle = io.popen("cd " .. temp_path .. " && find . -type f -o -type l")
 	if handle then
