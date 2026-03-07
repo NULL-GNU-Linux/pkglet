@@ -162,7 +162,14 @@ function cli.print_help()
 "   ~pkgname                       Build from source (same as --source)\n" ..
 "   pkgname{key=value,key2=value2} Set package options inline\n" ..
 "   ~pkgname{option=true}          Build from source with options\n" ..
+"   ] pkgname                      Install package\n" ..
+"   ] b ~pkgname                    Build package (from source)\n"..
 "\n" ..
+"ALIASES:\n"..
+"   ]               Alias for pkglet install (or build with ] b)\n"..
+"   pl              Alias for pkglet\n"..
+"   pkg             Alias for pkglet\n"..
+"\n"..
 "LICENSE: \27[1;30mMIT\27[0m\n")
 end
 
