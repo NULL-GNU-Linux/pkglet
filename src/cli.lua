@@ -45,6 +45,8 @@ function cli.parse(args)
         elseif arg == "--compression" then
             i = i + 1
             parsed.compression = args[i]
+        elseif arg == "--staged" then
+            parsed.staged = true
         elseif arg:match("^%-%-") then
             local opt = arg:sub(3)
             local key, value = opt:match("^([^=]+)=(.+)$")
@@ -105,72 +107,73 @@ end
 
 function cli.print_help()
     print("\27[1;32mpkglet\27[0m - The hybrid package manager for NULL\n" ..
-"\n" ..
-"USAGE:\n" ..
-    "\27[1;32mpkglet\27[0m \27[1;37m<command> [options] [package]\27[0m\n" ..
-"\n" ..
-"COMMANDS:\n" ..
-"   \27[1;37mi/install <package>\27[0m        Install a package\n" ..
-"   \27[1;37mb/build <package>\27[0m          Build package to tarball\n" ..
-"   \27[1;37mu/uninstall <package>\27[0m      Uninstall a package\n" ..
-"   \27[1;37mU/upgrade <package>\27[0m        Upgrade a package\n" ..
-"   \27[1;37md/downgrade <package>\27[0m      Downgrade a package\n" ..
-"   \27[1;37mpin <package> [version]\27[0m    Pin package to version\n" ..
-"   \27[1;37munpin <package>\27[0m            Unpin package\n" ..
-"   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
-"   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
-"   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
-"\n" ..
-"OPTIONS:\n" ..
-"   \27[1;37m--source\27[0m                   Build from source\n" ..
-"   \27[1;37m--binary\27[0m                   Install binary package\n" ..
-"   \27[1;37m--compression <type>\27[0m       Compression type (gzip, bzip2, xz, zstd, none)\n" ..
-"   \27[1;37m--bootstrap-to <path>\27[0m      Bootstrap to alternate root\n" ..
-"   \27[1;37m--noask\27[0m                    Skip installation confirmation\n" ..
-"   \27[1;37m--nodeps\27[0m                   Skip dependency installation\n" ..
-"   \27[1;37m--with-optional\27[0m            Install optional dependencies\n" ..
-"   \27[1;37m--force\27[0m                    Force installation (remove conflicts)\n" ..
-"   \27[1;37m--to <version>\27[0m             Target version for downgrade\n" ..
-"   \27[1;37m--pin\27[0m                      Pin package after install/upgrade\n" ..
-"   \27[1;37m--unpin\27[0m                    Unpin package before install/upgrade\n" ..
-"   \27[1;37m--<option> <value>\27[0m         Set package option\n" ..
-"   \27[1;37m--<flag>\27[0m                   Enable boolean package option\n" ..
-"\n" ..
-"EXAMPLES:\n" ..
-"   pkglet i org.kernel.linux\n" ..
-"   pkglet b org.kernel.linux\n" ..
-"   pkglet build org.kernel.linux --compression xz\n" ..
-"   pkglet install org.kernel.linux --source --menuconfig\n" ..
-"   pkglet install org.kernel.linux --with-optional\n" ..
-"   pkglet install gcc --bootstrap-to=/mnt/bootstrap\n" ..
-"   pkglet U org.kernel.linux\n" ..
-"   pkglet downgrade org.kernel.linux --to 6.15.0\n" ..
-"   pkglet d org.kernel.linux --to v6.15.0\n" ..
-"   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
-"   pkglet pin org.kernel.linux 6.17.5\n" ..
-"   pkglet unpin org.kernel.linux\n" ..
-"   pkglet uninstall org.kernel.linux\n" ..
-"   pkglet uninstall org.kernel.linux --noask\n" ..
-"   pkglet S\n" ..
-"   pkglet s git\n" ..
-"   pkglet install ~org.kernel.linux\n" ..
-"   pkglet install org.kernel.linux{no_headers=true}\n" ..
-"   pkglet install ~org.kernel.linux{menuconfig=true}\n" ..
-"   pkglet install virtual-webserver\n" ..
-"\n" ..
-"SYNTAX SHORTCUTS:\n" ..
-"   ~pkgname                       Build from source (same as --source)\n" ..
-"   pkgname{key=value,key2=value2} Set package options inline\n" ..
-"   ~pkgname{option=true}          Build from source with options\n" ..
-"   ] pkgname                      Install package\n" ..
-"   ] b ~pkgname                    Build package (from source)\n"..
-"\n" ..
-"ALIASES:\n"..
-"   ]               Alias for pkglet install (or build with ] b)\n"..
-"   pl              Alias for pkglet\n"..
-"   pkg             Alias for pkglet\n"..
-"\n"..
-"LICENSE: \27[1;30mMIT\27[0m\n")
+        "\n" ..
+        "USAGE:\n" ..
+        "\27[1;32mpkglet\27[0m \27[1;37m<command> [options] [package]\27[0m\n" ..
+        "\n" ..
+        "COMMANDS:\n" ..
+        "   \27[1;37mi/install <package>\27[0m        Install a package\n" ..
+        "   \27[1;37mb/build <package>\27[0m          Build package to tarball\n" ..
+        "   \27[1;37mu/uninstall <package>\27[0m      Uninstall a package\n" ..
+        "   \27[1;37mU/upgrade <package>\27[0m        Upgrade a package\n" ..
+        "   \27[1;37md/downgrade <package>\27[0m      Downgrade a package\n" ..
+        "   \27[1;37mpin <package> [version]\27[0m    Pin package to version\n" ..
+        "   \27[1;37munpin <package>\27[0m            Unpin package\n" ..
+        "   \27[1;37ms/search <query>\27[0m           Search for packages\n" ..
+        "   \27[1;37mS/sync\27[0m                     Sync package repositories\n" ..
+        "   \27[1;37mI/info <package>\27[0m           Show package information\n" ..
+        "\n" ..
+        "OPTIONS:\n" ..
+        "   \27[1;37m--source\27[0m                   Build from source\n" ..
+        "   \27[1;37m--binary\27[0m                   Install binary package\n" ..
+        "   \27[1;37m--staged\27[0m                   Build staged package (metadata + tar)\n" ..
+        "   \27[1;37m--compression <type>\27[0m       Compression type (gzip, bzip2, xz, zstd, none)\n" ..
+        "   \27[1;37m--bootstrap-to <path>\27[0m      Bootstrap to alternate root\n" ..
+        "   \27[1;37m--noask\27[0m                    Skip installation confirmation\n" ..
+        "   \27[1;37m--nodeps\27[0m                   Skip dependency installation\n" ..
+        "   \27[1;37m--with-optional\27[0m            Install optional dependencies\n" ..
+        "   \27[1;37m--force\27[0m                    Force installation (remove conflicts)\n" ..
+        "   \27[1;37m--to <version>\27[0m             Target version for downgrade\n" ..
+        "   \27[1;37m--pin\27[0m                      Pin package after install/upgrade\n" ..
+        "   \27[1;37m--unpin\27[0m                    Unpin package before install/upgrade\n" ..
+        "   \27[1;37m--<option> <value>\27[0m         Set package option\n" ..
+        "   \27[1;37m--<flag>\27[0m                   Enable boolean package option\n" ..
+        "\n" ..
+        "EXAMPLES:\n" ..
+        "   pkglet i org.kernel.linux\n" ..
+        "   pkglet b org.kernel.linux\n" ..
+        "   pkglet build org.kernel.linux --compression xz\n" ..
+        "   pkglet install org.kernel.linux --source --menuconfig\n" ..
+        "   pkglet install org.kernel.linux --with-optional\n" ..
+        "   pkglet install gcc --bootstrap-to=/mnt/bootstrap\n" ..
+        "   pkglet U org.kernel.linux\n" ..
+        "   pkglet downgrade org.kernel.linux --to 6.15.0\n" ..
+        "   pkglet d org.kernel.linux --to v6.15.0\n" ..
+        "   pkglet downgrade org.kernel.linux --to a1b2c3d4\n" ..
+        "   pkglet pin org.kernel.linux 6.17.5\n" ..
+        "   pkglet unpin org.kernel.linux\n" ..
+        "   pkglet uninstall org.kernel.linux\n" ..
+        "   pkglet uninstall org.kernel.linux --noask\n" ..
+        "   pkglet S\n" ..
+        "   pkglet s git\n" ..
+        "   pkglet install ~org.kernel.linux\n" ..
+        "   pkglet install org.kernel.linux{no_headers=true}\n" ..
+        "   pkglet install ~org.kernel.linux{menuconfig=true}\n" ..
+        "   pkglet install virtual-webserver\n" ..
+        "\n" ..
+        "SYNTAX SHORTCUTS:\n" ..
+        "   ~pkgname                       Build from source (same as --source)\n" ..
+        "   pkgname{key=value,key2=value2} Set package options inline\n" ..
+        "   ~pkgname{option=true}          Build from source with options\n" ..
+        "   ] pkgname                      Install package\n" ..
+        "   ] b ~pkgname                   Build package (from source)\n" ..
+        "\n" ..
+        "ALIASES:\n" ..
+        "   ]               Alias for pkglet install (or build with ] b)\n" ..
+        "   pl              Alias for pkglet\n" ..
+        "   pkg             Alias for pkglet\n" ..
+        "\n" ..
+        "LICENSE: \27[1;30mMIT\27[0m\n")
 end
 
 return cli

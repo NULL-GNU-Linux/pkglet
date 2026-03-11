@@ -36,6 +36,157 @@ local function main()
     end
 
     if args.command == "i" or args.command == "install" then
+        local function is_staged_file(path)
+            local f = io.open(path, "r")
+            if not f then
+                return false
+            end
+            local header = f:read(200)
+            f:close()
+            return header and header:match("name=") ~= nil
+        end
+
+        local function parse_staged_metadata(path)
+            local meta = {}
+            local handle = io.popen("grep -a -n '^===tar===$' '" .. path .. "' | cut -d: -f1 | head -1")
+            if not handle then
+                return nil
+            end
+            local line_num = tonumber(handle:read("*a"))
+            handle:close()
+            if not line_num then
+                return nil
+            end
+            local pipe = io.popen("head -n " .. (line_num - 1) .. " '" .. path .. "'")
+            if not pipe then
+                return nil
+            end
+            local meta_content = pipe:read("*a")
+            pipe:close()
+            for line in meta_content:gmatch("[^\r\n]+") do
+                local key, value = line:match("^([^=]+)=(.+)$")
+                if key and value then
+                    meta[key] = value
+                end
+            end
+            return meta
+        end
+
+        local function extract_staged(path, dest)
+            os.execute("mkdir -p " .. dest)
+            local handle = io.popen("grep -a -n '^===tar===$' '" .. path .. "' | cut -d: -f1 | head -1")
+            local line_num = nil
+            if handle then
+                local raw = handle:read("*a")
+                if raw and raw ~= "" then line_num = tonumber(raw) end
+                handle:close()
+            end
+            if line_num then
+                os.execute("tail -n +" .. (line_num + 1) .. " '" .. path .. "' | tar -xzaf - -C " .. dest)
+            else
+                os.execute("sed '1,/^===tar===$/d' '" .. path .. "' | tar -xzaf - -C " .. dest)
+            end
+        end
+
+        if args.package and args.package:match("%.tar.*%.staged$") then
+            local staged_path = args.package
+            if not io.open(staged_path, "r") then
+                staged_path = "./" .. args.package
+            end
+            if not io.open(staged_path, "r") then
+                io.stderr:write("error: staged file not found: " .. args.package .. "\n")
+                os.exit(1)
+            end
+            local meta = parse_staged_metadata(staged_path)
+            if not meta then
+                io.stderr:write("error: invalid staged file: " .. args.package .. "\n")
+                os.exit(1)
+            end
+            print("Installing staged package: " .. meta.name .. " " .. meta.version)
+            if args.bootstrap_to then
+                config.set_bootstrap_root(args.bootstrap_to)
+                print("Bootstrap mode: installing to " .. config.ROOT)
+            end
+            local temp_dir = os.tmpname()
+            os.execute("rm -f " .. temp_dir)
+            local extract_dir = temp_dir .. "/extract"
+            extract_staged(staged_path, extract_dir)
+            local pkg_name = meta.name:gsub("%.", "-")
+            print("Build type: binary")
+            print("Copying files from temporary location...")
+            os.execute("mkdir -p " .. config.ROOT)
+            os.execute("cp -a " .. extract_dir .. "/* " .. config.ROOT .. "/ 2>/dev/null || true")
+
+            local files_list = {}
+            local handle = io.popen("cd " .. extract_dir .. " && find . -type f -o -type l 2>/dev/null")
+            if handle then
+                for line in handle:lines() do
+                    local file_path = line:match("^%.(.+)$")
+                    if file_path then
+                        table.insert(files_list, file_path)
+                    end
+                end
+                handle:close()
+            end
+            os.execute("rm -rf " .. extract_dir)
+
+            local manifest = {
+                name = meta.name,
+                version = meta.version,
+                description = meta.description or "",
+                license = meta.license or "unknown",
+                depends = {},
+                build_depends = {},
+                optional_depends = {},
+                conflicts = {},
+                replaces = {}
+            }
+
+            if meta.deps and meta.deps ~= "" then
+                for dep in meta.deps:gmatch("[^,]+") do
+                    table.insert(manifest.depends, dep)
+                end
+            end
+            if meta.build_depends and meta.build_depends ~= "" then
+                for dep in meta.build_depends:gmatch("[^,]+") do
+                    table.insert(manifest.build_depends, dep)
+                end
+            end
+            if meta.optional_depends and meta.optional_depends ~= "" then
+                for dep in meta.optional_depends:gmatch("[^,]+") do
+                    table.insert(manifest.optional_depends, dep)
+                end
+            end
+            if meta.conflicts and meta.conflicts ~= "" then
+                for dep in meta.conflicts:gmatch("[^,]+") do
+                    table.insert(manifest.conflicts, dep)
+                end
+            end
+            if meta.replaces and meta.replaces ~= "" then
+                for dep in meta.replaces:gmatch("[^,]+") do
+                    table.insert(manifest.replaces, dep)
+                end
+            end
+
+            installer.record_installation(manifest, files_list)
+
+            if not args.nodeps then
+                local packages_to_install = installer.resolve_dependencies(manifest, {}, args.force)
+                for dep_name, dep_version in pairs(packages_to_install) do
+                    if dep_name ~= manifest.name then
+                        local dep_manifest = loader.load_manifest(dep_name)
+                        dep_manifest.version = dep_version
+                        installer.install(dep_manifest, args)
+                    end
+                end
+            end
+            
+            os.execute("rm -rf " .. temp_dir)
+            print("Successfully installed " .. meta.name)
+            print(":: installed: " .. meta.name)
+            return
+        end
+
         if args.unpin then
             config.unpin_package(args.package)
         end
@@ -154,6 +305,28 @@ local function main()
         loader.print_info(manifest)
 
     elseif args.command == "b" or args.command == "build" then
+        local function serialize_deps(deps)
+            if not deps or #deps == 0 then
+                return ""
+            end
+            local lines = {}
+            for _, dep in ipairs(deps) do
+                table.insert(lines, tostring(dep))
+            end
+            return table.concat(lines, ",")
+        end
+
+        local function serialize_table(t)
+            if not t or #t == 0 then
+                return ""
+            end
+            local lines = {}
+            for _, v in ipairs(t) do
+                table.insert(lines, tostring(v))
+            end
+            return table.concat(lines, ",")
+        end
+
         local temp_dir = os.tmpname()
         os.execute("rm -f " .. temp_dir)
         os.execute("mkdir -p " .. temp_dir)
@@ -190,11 +363,66 @@ local function main()
         elseif compression == "zstd" then
             tar_opts = "-cf --zstd"
         end
-        print(":: compressing output")
-        os.execute("cd " .. bootstrap_dir .. " && tar --checkpoint=10 --checkpoint-action=ttyout=':: %u files done\\r' " .. tar_opts .. " " .. output_file .. " . 2>/dev/null")
-        os.execute("mv " .. bootstrap_dir .. "/" .. output_file .. " .")
-        os.execute("rm -rf " .. temp_dir)
-        print(":: built: " .. output_file)
+
+        if args.staged then
+            local staged_file = output_file .. ".staged"
+            local staged_path = temp_dir .. "/" .. staged_file
+            local meta_file = temp_dir .. "/metadata"
+            local f = io.open(meta_file, "w")
+            if f then
+                f:write("name=" .. manifest.name .. "\n")
+                f:write("version=" .. manifest.version .. "\n")
+                f:write("deps=" .. serialize_deps(manifest.depends) .. "\n")
+                f:write("build_depends=" .. serialize_deps(manifest.build_depends) .. "\n")
+                f:write("optional_depends=" .. serialize_deps(manifest.optional_depends) .. "\n")
+                f:write("conflicts=" .. serialize_table(manifest.conflicts) .. "\n")
+                f:write("replaces=" .. serialize_table(manifest.replaces) .. "\n")
+                f:write("license=" .. manifest.license .. "\n")
+                f:write("description=" .. manifest.description .. "\n")
+                f:close()
+            end
+
+            local tar_temp = temp_dir .. "/data.tar"
+            local tar_file = tar_temp
+            if compression == "gzip" then
+                tar_file = tar_temp .. ".gz"
+            elseif compression == "bzip2" then
+                tar_file = tar_temp .. ".bz2"
+            elseif compression == "xz" then
+                tar_file = tar_temp .. ".xz"
+            elseif compression == "zstd" then
+                tar_file = tar_temp .. ".zst"
+            end
+            print(":: compressing staged package")
+            os.execute("cd " .. bootstrap_dir .. " && tar --exclude=db " .. tar_opts .. " " .. tar_file .. " . 2>/dev/null")
+
+            local out = io.open(staged_path, "wb")
+            if out then
+                local meta = io.open(meta_file, "r")
+                if meta then
+                    out:write(meta:read("*a"))
+                    meta:close()
+                end
+                out:write("===tar===\n")
+                local tar_data = io.open(tar_file, "rb")
+                if tar_data then
+                    out:write(tar_data:read("*a"))
+                    tar_data:close()
+                end
+                out:close()
+            end
+
+            os.execute("rm -f " .. tar_file .. " " .. meta_file)
+            os.execute("mv " .. temp_dir .. "/" .. staged_file .. " .")
+            os.execute("rm -rf " .. temp_dir)
+            print(":: built: " .. staged_file)
+        else
+            print(":: compressing output")
+            os.execute("cd " .. bootstrap_dir .. " && tar --checkpoint=10 --checkpoint-action=ttyout=':: %u files done\\r' --exclude=db " .. tar_opts .. " " .. output_file .. " . 2>/dev/null")
+            os.execute("mv " .. bootstrap_dir .. "/" .. output_file .. " .")
+            os.execute("rm -rf " .. temp_dir)
+            print(":: built: " .. output_file)
+        end
 
     elseif args.command == "c" or args.command == "clean" then
         os.execute("rm -rf " .. config.CACHE_PATH)

@@ -232,7 +232,7 @@ function installer.record_installation(manifest, files_list)
 		f:write("name=" .. manifest.name .. "\n")
 		f:write("version=" .. manifest.version .. "\n")
 		f:write("installed=" .. os.time() .. "\n")
-		f:write("manifest_path=" .. manifest._path .. "\n")
+		f:write("manifest_path=" .. (manifest._path or "") .. "\n")
 		if files_list then
 			for _, file in ipairs(files_list) do
 				f:write("file=" .. file .. "\n")
