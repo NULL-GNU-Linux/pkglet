@@ -98,6 +98,7 @@ pkglet i org.kernel.linux --source
 pkglet i org.kernel.linux --menuconfig
 pkglet i org.kernel.linux --with-optional
 pkglet i org.kernel.linux --to 6.17.5
+pkglet i ./org-gnu-grub-2.14.tar.gz.staged
 ```
 
 **Optional Dependencies:**
