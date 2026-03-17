@@ -64,6 +64,7 @@ config.package_options = {}
 config.masked_packages = {}
 config.pinned_packages = {}
 config.repos = {}
+config.noask = false
 function config.init()
     os.execute("mkdir -p " .. config.DB_PATH)
     os.execute("mkdir -p " .. config.BUILD_PATH)

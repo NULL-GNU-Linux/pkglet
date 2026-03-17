@@ -1,6 +1,7 @@
 ### Navigation
 
-- [Home](/)
+- [Introduction](/)
+- [Pkglet](/pkglet/index)
 
 ### External Links
 

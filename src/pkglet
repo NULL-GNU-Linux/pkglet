@@ -19,6 +19,7 @@ local config = require("src.config")
 local function main()
     config.init()
     local args = cli.parse(arg)
+    config.noask = args.noask
     local binary_name = arg[0] or ""
     local is_bracket = binary_name:match(".*/]$") or binary_name == "]"
     if is_bracket then
@@ -171,14 +172,7 @@ local function main()
             installer.record_installation(manifest, files_list)
 
             if not args.nodeps then
-                local packages_to_install = installer.resolve_dependencies(manifest, {}, args.force)
-                for dep_name, dep_version in pairs(packages_to_install) do
-                    if dep_name ~= manifest.name then
-                        local dep_manifest = loader.load_manifest(dep_name)
-                        dep_manifest.version = dep_version
-                        installer.install(dep_manifest, args)
-                    end
-                end
+                installer.install(manifest, args)
             end
             
             os.execute("rm -rf " .. temp_dir)
@@ -334,6 +328,7 @@ local function main()
         os.execute("mkdir -p " .. bootstrap_dir)
         args.bootstrap_to = bootstrap_dir
         args.nodeps = true
+        args.force = true
         local conflict = require("src.conflict")
         local providers = conflict.get_providers(args.package)
         if #providers > 0 then
@@ -394,7 +389,7 @@ local function main()
                 tar_file = tar_temp .. ".zst"
             end
             print(":: compressing staged package")
-            os.execute("cd " .. bootstrap_dir .. " && tar --exclude=db " .. tar_opts .. " " .. tar_file .. " . 2>/dev/null")
+            os.execute("cd " .. bootstrap_dir .. " && tar --checkpoint=10 --checkpoint-action=ttyout=':: %u files done\\r' --exclude=db " .. tar_opts .. " " .. tar_file .. " . 2>/dev/null")
 
             local out = io.open(staged_path, "wb")
             if out then
@@ -418,7 +413,7 @@ local function main()
             print(":: built: " .. staged_file)
         else
             print(":: compressing output")
-            os.execute("cd " .. bootstrap_dir .. " && tar --checkpoint=10 --checkpoint-action=ttyout=':: %u files done\\r' --exclude=db " .. tar_opts .. " " .. output_file .. " . 2>/dev/null")
+            os.execute("cd " .. bootstrap_dir .. " && (tar --checkpoint=10 --checkpoint-action=ttyout=':: %u files done\\r' --exclude=db " .. tar_opts .. " " .. output_file .. " . 2>/dev/null)")
             os.execute("mv " .. bootstrap_dir .. "/" .. output_file .. " .")
             os.execute("rm -rf " .. temp_dir)
             print(":: built: " .. output_file)

@@ -77,6 +77,52 @@ function builder.build(manifest, build_dir, build_type, options)
         print("\27[7m-> " .. cmd .. "\27[0m")
         os.execute(cmd)
     end
+	env.pkglet = {
+		install = function(name, options)
+			local installer = require("src.installer")
+			local loader = require("src.loader")
+			local cli = require("src.cli")
+			local args = cli.parse({ "install", name })
+			args.noask = config.noask
+			if options then
+				for k, v in pairs(options) do
+					if k == "noask" then
+						args.noask = v
+					else
+						args.options[k] = v
+					end
+				end
+			end
+			return installer.install(loader.load_manifest(name), args)
+		end,
+		uninstall = function(name, options)
+			local installer = require("src.installer")
+			local loader = require("src.loader")
+			local manifest = loader.load_manifest(name)
+			local noask = config.noask
+			if options and options.noask ~= nil then
+				noask = options.noask
+			end
+			if not noask then
+				io.write("Uninstall " .. name .. "? \27[7m[Y/n]\27[0m ")
+				local response = io.read()
+				if response and response:lower():sub(1, 1) == "n" then
+					print("Uninstall cancelled.")
+					return
+				end
+			end
+			return installer.uninstall(manifest)
+		end,
+		sync = function()
+			local sync = require("src.sync")
+			return sync.update_repos()
+		end,
+		info = function(name)
+			local loader = require("src.loader")
+			local manifest = loader.load_manifest(name)
+			return loader.print_info(manifest)
+		end,
+	}
 	env.ROOT = config.ROOT
 	env.CONFIG = config
 	local build_fn
