@@ -4,8 +4,8 @@ ifeq ($(IS_ROOT),0)
 PREFIX ?= $(DESTDIR)/usr
 BINDIR = $(PREFIX)/bin
 LIBDIR = $(PREFIX)/lib/pkglet
-ETCDIR = /etc/pkglet
-CACHEDIR = /var/cache/pkglet
+ETCDIR = $(DESTDIR)/etc/pkglet
+CACHEDIR = $(DESTDIR)/var/cache/pkglet
 else
 PREFIX ?= $(DESTDIR)$(HOME)/.local
 BINDIR = $(PREFIX)/bin
@@ -24,7 +24,7 @@ docs:
 	cp docs/config.json docs/Markdownium/
 
 install_docs:
-	@mkdir -p /usr/share/doc/pkglet/
+	@mkdir -p $(PREFIX)/share/doc/pkglet/
 	cp -r docs/* $(PREFIX)/share/doc/pkglet/
 
 install:
