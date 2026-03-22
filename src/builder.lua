@@ -281,7 +281,7 @@ print("\27[7m-> " .. cmd .. "\27[0m")
 end
 
 function builder.meson_wrapper(build_dir, args)
-	local cmd = "cd " .. build_dir .. " && meson setup"
+	local cmd = "cd " .. build_dir .. " && meson"
 	if args then
 		for _, arg in ipairs(args) do
 			cmd = cmd .. " " .. arg
