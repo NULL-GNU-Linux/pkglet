@@ -78,8 +78,8 @@ end
 function config.load_repos()
     local f = io.open(config.REPOS_CONF, "r")
     if not f then return end
-    for line in f:lines() do
-        line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
+    for _line in f:lines() do
+        local line = _line:gsub("#.*", ""):match("^%s*(.-)%s*$")
         if line ~= "" then
             local name, path = line:match("^(%S+)%s+(%S+)$")
             if name and path then
@@ -103,8 +103,8 @@ function config.load_package_options()
             config.package_options[pkg] = {}
             local f = io.open(filepath, "r")
             if f then
-                for line in f:lines() do
-                    line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
+                for _line in f:lines() do
+                    local line = _line:gsub("#.*", ""):match("^%s*(.-)%s*$")
                     if line ~= "" then
                         for opt in line:gmatch("%S+") do
                             config.package_options[pkg][opt] = true
@@ -121,8 +121,8 @@ end
 function config.load_masks()
     local f = io.open(config.PACKAGE_MASK, "r")
     if not f then return end
-    for line in f:lines() do
-        line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
+    for _line in f:lines() do
+        local line = _line:gsub("#.*", ""):match("^%s*(.-)%s*$")
         if line ~= "" then
             local repo, pkg = line:match("^([^/]+)/(.+)$")
             if repo and pkg then
@@ -186,8 +186,8 @@ end
 function config.load_pins()
     local f = io.open(config.PACKAGE_LOCK, "r")
     if not f then return end
-    for line in f:lines() do
-        line = line:gsub("#.*", ""):match("^%s*(.-)%s*$")
+    for _line in f:lines() do
+        local line = _line:gsub("#.*", ""):match("^%s*(.-)%s*$")
         if line ~= "" then
             local pkg, version = line:match("^([^%s]+)%s+(.+)$")
             if pkg and version then
